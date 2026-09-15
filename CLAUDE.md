@@ -48,6 +48,14 @@ already and had to be rebuilt. Do not re-break them.
    until the thing it would protect actually exists and has real users.
    Sessions are anonymous and nothing is saved — that's a deliberate
    current choice, not a gap to rush to fill.
+8. **No word's example sentence may be a generic template reused across
+   other words.** 17 nouns once all said "Das ist der/die/das ___." and
+   11 language adjectives all said "Ich spreche ___." — real content
+   made interchangeable with a stand-in, found from actual use, not a
+   style nitpick. Outside `type:'phrase'` (which must share `blank:'___'`
+   by design), no two words may share an identical carrier sentence — now
+   enforced by `test-sentence-variety.js`. Reach for the recurring cast
+   (`ARCHITECTURE.md` §7) before writing a generic "Das ist X."
 
 ## The process, every time
 
@@ -86,10 +94,23 @@ already and had to be rebuilt. Do not re-break them.
   despite being referenced here and in `ARCHITECTURE.md`): pure-logic
   tests extracted straight from the live file via `tests/extract-live.js`
   — word-shape validation, `test-prompt-consistency.js`, answer-checking,
-  hundreds-of-trials session-building/Stage-4-reachability, and Stage-4
-  distractor-quality checks. Run all of `tests/*.js` (skip
-  `extract-live.js`, it's the shared helper) before shipping any content
-  or logic change.
+  hundreds-of-trials session-building/Stage-4-reachability, Stage-4
+  distractor-quality checks, and sentence-variety (below). Run all of
+  `tests/*.js` (skip `extract-live.js`, it's the shared helper) before
+  shipping any content or logic change.
+- **Fixed a real content-quality bug:** 17 of 28 nouns and 11 language
+  adjectives once shared one literal, interchangeable carrier sentence
+  each ("Das ist der/die/das ___." / "Ich spreche ___.") — reads as
+  vague rather than as a real example, and was flagged from actual use.
+  Rewrote all 30 with real variety, introducing a **recurring cast**
+  (Julia, Niklas, Frau Kowalski, Frau Weber, Herr Hansen — the
+  glossary's own example people, not invented; see `ARCHITECTURE.md`
+  §7) so sentences read like one continuing set of people instead of
+  disconnected flashcards. Now enforced by
+  `tests/test-sentence-variety.js`: outside `type:'phrase'` (which must
+  share `blank:'___'` by design), no two words may share an identical
+  carrier sentence — zero tolerance, not a cap. Apply this convention to
+  every new noun/adjective sentence going forward.
 - **Known legacy gap, not a bug:** the original 25-word starter set
   predates `pluralMarker`/`pluralForm` being part of the noun data model
   and doesn't have them. These fields are confirmed unused at runtime

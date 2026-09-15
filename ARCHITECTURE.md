@@ -176,6 +176,31 @@ Source PDFs: the official Klett "Netzwerk neu" A1 and A2 glossaries.
 already caused one near-miss and is now a standing rule, not a
 suggestion.
 
+**Sentence variety is a requirement, not a nice-to-have.** 17 of the
+bank's first 28 nouns once shared one literal carrier sentence ("Das ist
+der/die/das ___.") with nothing varied but the noun — the kind of
+interchangeable template that reads as vague rather than as a real
+example. `tests/test-sentence-variety.js` now enforces that no two nouns
+share an identical `blank`, and caps how many words bank-wide may share
+any single template. When writing a noun's sentence, use a real verb and
+a real context — not a bare identity statement — and draw on the
+**recurring cast** below rather than inventing new names each time:
+
+| Name | Source |
+|---|---|
+| Julia | Netzwerk neu A1, 2a ("Hallo, ich bin Julia.") |
+| Niklas | Netzwerk neu A1, 2a/2c ("Ich heiße Niklas.") |
+| Frau Kowalski | Netzwerk neu A1, 3a ("Das ist Frau Kowalski.") |
+| Frau Weber | Netzwerk neu A1, 3a ("Guten Morgen, Frau Weber.") |
+| Herr Hansen | Netzwerk neu A1, 3a ("Guten Tag, Herr Hansen.") |
+
+These are the glossary's own example people, not invented — reusing them
+keeps the bank's example sentences feeling like one continuing set of
+people instead of disconnected flashcards, the same way a real course's
+dialogues do. Not every noun sentence needs a named person (e.g. "Die
+Woche hat sieben Tage." doesn't), but reach for this cast before
+reaching for a generic "Das ist X."
+
 Workflow per chapter section: extract the raw text, cross-check it looks
 right, then hand-categorize each entry by type (§2) — including
 deciding what to leave out. Established exclusions, for consistency:
