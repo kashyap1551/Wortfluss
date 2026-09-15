@@ -1,0 +1,208 @@
+# Wortfluss — Technical Architecture
+
+## 1. Stack
+
+One file: `wortfluss-full.html`. Inline `<style>`, inline `<script>`,
+vanilla JS. No framework, no build step, no package manager, no backend,
+no database. It runs by opening the file in a browser. Every word the
+app knows about lives in one JS array (`WORDS`) embedded directly in
+that file.
+
+This is deliberate, not a placeholder waiting to be "done properly" — see
+PRD.md §9 and §7 on why a backend isn't justified yet.
+
+## 2. Data model
+
+Every entry in `WORDS` shares a common shape, extended per type.
+
+**Fields every word has:**
+
+| Field | Type | Meaning |
+|---|---|---|
+| `id` | string | Unique, lowercase, no spaces. Must not collide with any other entry. |
+| `type` | string | One of `noun`, `verb`, `separable`, `combo`, `adjective`, `phrase`. |
+| `glue` | boolean | Whether this word counts toward the foundational-vocabulary threshold that unlocks Stage 4 (see §3, `stage4Unlocked`). |
+| `de` | string | The German word/infinitive, as shown in Stage 1 and the summary screen. |
+| `en` | string | English meaning. |
+| `blank` | string | The sentence with the target blanked out as `___` (one `___` per required input). |
+| `full` | string | The same sentence, correctly filled in. Must contain no `___`. |
+| `enSent` | string | English translation of the full sentence. |
+| `ans` | string[] | The correct filler(s), in the same left-to-right order as the `___`s in `blank`. Checked case-insensitively, whitespace-tolerant, and ß/ss-equivalent. |
+| `prompt` | string | The Stage-4 practice question. **Always plain English** — see the rule below. |
+
+**Type-specific fields:**
+
+- **noun**: `article` (`der`/`die`/`das`), `pluralMarker` (raw glossary
+  form, e.g. `"-er`), `pluralForm` (the actual correct plural word, hand-
+  verified, e.g. `Handtücher`). No `conj`.
+- **verb**: `conj` — exactly 6 strings, present tense, in order: ich, du,
+  er/sie/es, wir, ihr, sie/Sie. One `___` in `blank`, one entry in `ans`.
+- **separable**: everything a verb has, plus `prefix` and `stem` (e.g.
+  `prefix:'zu', stem:'ordnen'` for *zuordnen*). Each `conj` row shows the
+  split form with an ellipsis, e.g. `'ich ordne ... zu'`. **Two** `___`s
+  in `blank`; `ans` has 2 entries, in order: conjugated stem, then the
+  stranded prefix.
+- **combo**: a verb and a noun taught in one sentence. `conj` covers the
+  verb half only. Two `___`s in `blank`, two entries in `ans` (verb form,
+  then noun).
+- **adjective**: no `article`, no `conj`. Kept in predicate position
+  (`"X ist ___"` or equivalent) specifically to avoid case/ending
+  agreement, which is out of scope for Beginner content. One `___`.
+  There is no dedicated adverb type — invariant adverbs (*auch*, *ganz*,
+  *sehr*, ...) are typed `adjective` too, since structurally they're
+  identical (no article, no conj, one invariant-word blank). This was a
+  deliberate call, not an oversight: it matches the precedent already set
+  by language names (*Deutsch*, *Englisch*, ...), which aren't predicate
+  adjectives either but were typed `adjective` from the start. The
+  tradeoff: the end-of-session summary's type label will say "adjective"
+  for a word that's grammatically an adverb. Revisit only if that
+  mislabeling becomes a real problem in use, not preemptively.
+- **phrase**: no `article`, no `conj`. `blank` is **always** the literal
+  string `'___'` — the whole phrase is the answer, which means it reuses
+  the exact same checking code as everything else with no special case
+  needed. `ans` has exactly 1 entry: the phrase itself, lowercased.
+
+**The verb-prompt rule (learned from a real, widespread bug — see
+`test-prompt-consistency.js`):** a `prompt` must never display a
+conjugated form that conflicts with what's actually taught — neither a
+different form of *this* word's own verb, nor a form of any *other* verb
+taught elsewhere in the bank. The fix that's now standard practice:
+**write every `prompt` in plain English.** This isn't a style
+preference — it's the only way to structurally guarantee the conflict
+can't happen as more verbs get added later. Apply this to every new verb
+or verb-adjacent prompt going forward.
+
+## 3. Core functions
+
+| Function | Does |
+|---|---|
+| `shuffled(arr)` | Fisher-Yates shuffle. Returns a new array; never mutates the input. |
+| `buildSession(count)` | Builds a random session of `count` words. Reserves enough `glue:true` words to meet `GLUE_THRESHOLD` before filling the rest randomly, then shuffles the combined set — see §4 for why the reservation exists. |
+| `stage4Unlocked(sessionWords, currentIndex, threshold)` | True once `threshold` glue words have appeared before `currentIndex` in the session. |
+| `highlightSentence(fullSentence, targets)` | Wraps each string in `targets` with a highlight span inside `fullSentence`, word-boundary matched. |
+| `normalizeAnswer(s)` | `trim().toLowerCase()`, then `ß` → `ss`. The single source of truth for "is this answer close enough" — used everywhere an answer gets checked. |
+| `checkAnswer(userAnswers, word)` | Stage 2's checker: every entry in `userAnswers` must `normalizeAnswer`-match the corresponding entry in `word.ans`, in order. |
+| `buildStage4Options(word, allWords)` | Builds the 3 Stage-4 multiple-choice options (see §5 below for the strategy). |
+| `renderStage()` | Draws whichever of the 4 stages `state.stage` currently points to. |
+| `advanceStage()` / `finishWord()` | Move to the next stage / next word. Both only ever fire from an explicit user click — never a timer. |
+| `revealHint()` | Fills in the on-demand hint text with the word's `de` spelling. |
+| `typeLabel(type)` | Maps a `type` to its display label in the end-of-session summary (`separable` → "separable verb", etc.) |
+
+## 4. Why session-building isn't a simple random draw
+
+Pure unguarded shuffling was tried, tested, and rejected: across 300
+simulated 10-word sessions, roughly two-thirds never included enough
+foundational vocabulary to unlock Stage 4 at all. `buildSession`
+therefore reserves `GLUE_THRESHOLD` (currently 3) glue words first,
+fills the remaining slots randomly from everyone else, then shuffles the
+whole set together — so the glue words aren't predictably front-loaded,
+but Stage 4 is still guaranteed reachable every time. This is
+regression-tested with hundreds of randomized trials, not a single
+sample run (session-building logic is inherently probabilistic, so a
+single passing test proves nothing).
+
+**A gap in that guarantee existed until it was caught by writing the
+hundreds-of-trials test this section describes** (the test itself didn't
+exist until the 2a–2c content batch): `stage4Unlocked` only counts glue
+words appearing *strictly before* the current word's index, so a reserved
+glue word that the final shuffle happened to place in the session's very
+*last* slot didn't count toward unlocking anything reachable. Measured at
+~5% of 10-word sessions and ~0.2% of 25-word sessions before the fix.
+`buildSession` now checks for exactly that case (glue count in the whole
+session at or below `GLUE_THRESHOLD`, and the last slot holding a glue
+word) and swaps the last slot with an earlier non-glue word when it
+applies. Covered by `tests/test-session-building.js`.
+
+## 5. Stage 4: how the multiple-choice options are built
+
+`buildStage4Options` never invents new German — every option shown is
+either the real taught sentence or a sentence that's already correct
+somewhere else in the data. Two strategies, by type:
+
+- **verb / combo / separable**: the 2 wrong options are the *same*
+  sentence with a *different* conjugated form substituted in (pulled
+  from that word's own `conj` list), so the learner is tested on
+  exactly the form just taught, by recognizing rather than typing it.
+- **noun / adjective / phrase**: the 2 wrong options are borrowed
+  whole from other words' `full` sentences elsewhere in the bank.
+  Synthesizing a wrong noun sentence generically (e.g. swapping the
+  article) was considered and rejected — several real sentences use a
+  non-nominative case (e.g. *"auf der Autobahn"* is dative, not the
+  nominative `die` stored in `article`), so a naive swap risks producing
+  either an accidentally-correct or an ungrammatical option. Borrowing
+  real, already-verified sentences sidesteps that risk entirely.
+
+## 6. Testing approach
+
+No test framework — plain Node scripts, run directly (`node
+tests/whatever.js`), living alongside the app. Two kinds:
+
+1. **Pure-logic tests.** `tests/extract-live.js` is the shared helper:
+   regex out the live HTML file's `<script>` contents, run them in a
+   Node `vm` context (with a minimal `document` stub the pure-logic
+   functions never actually call), then pull `WORDS`, `buildSession`,
+   `checkAnswer`, etc. out with a follow-up `vm.runInContext('WORDS',
+   context)` per name — top-level `const`/`let` are context-local
+   bindings, not properties of the sandbox object, the same quirk noted
+   below for jsdom windows. Every other test file requires this helper
+   and tests the real extracted functions — never a hand-written
+   reimplementation, since testing a reimplementation only proves the
+   reimplementation is correct, not the shipped file. Currently covers:
+   `test-word-shape.js` (per-type field validation), 
+   `test-prompt-consistency.js` (rule 4), `test-answer-checking.js`
+   (rule 5), `test-session-building.js` (§4's guarantee), and
+   `test-stage4-options.js` (§5's two distractor strategies).
+2. **Interaction tests**, using `jsdom` — **not yet built**. The plan is
+   to load the real file into a simulated browser and drive it exactly
+   like a person would: click buttons, type into fields, read back what
+   actually rendered. This is the only way to verify DOM-level behaviors
+   like "does it actually wait for Next" or "does the hint really
+   appear" — a static read of the code
+   can look correct and still be wrong at the DOM level.
+
+Two things worth knowing if you extend these: top-level `const`/`let`
+declared in the page's `<script>` (like `WORDS` and `state`) never
+attach to `window` — reach them through `win.eval('...')` inside a
+`jsdom` window, not `win.WORDS`. And anything involving `buildSession`
+or `buildStage4Options` needs many trials (hundreds, not one), since
+both are randomized and a single passing run proves very little.
+
+## 7. Content extraction
+
+Source PDFs: the official Klett "Netzwerk neu" A1 and A2 glossaries.
+**Extraction must use PyMuPDF (`import pymupdf`), never `pdftotext`** —
+`pdftotext` silently drops characters on this document's embedded font
+(confirmed directly: it renders "Englisch" as "nglisch"). This has
+already caused one near-miss and is now a standing rule, not a
+suggestion.
+
+Workflow per chapter section: extract the raw text, cross-check it looks
+right, then hand-categorize each entry by type (§2) — including
+deciding what to leave out. Established exclusions, for consistency:
+
+- The glossary's own article-drill entries (e.g. "das (das Würstchen)")
+  — redundant with Stage 1's own article teaching.
+- Pure function words (pronouns, bare prepositions, conjunctions,
+  articles used alone) — absorbed into other words' example sentences
+  instead of becoming standalone entries.
+- Substantivized adjectives (e.g. *der/die Kranke*) and attributive-only
+  adjectives that don't sit naturally in predicate position (e.g.
+  *andere*) — both need their own mechanic, not a forced fit into the
+  existing noun/adjective shapes.
+
+## 8. Known technical debt / future direction
+
+- **No database yet.** If/when one is needed, the original design
+  called for Supabase/Postgres with tables: `words` (carrying
+  `cefr_level` and `is_glue_word`), `verb_conjugations`,
+  `exercise_templates` (with a `reviewed` boolean — nothing generated
+  from source material goes live unreviewed), `users`, `user_progress`,
+  `sessions`, `exam_results`. None of this is built; it's a direction,
+  not a commitment, and shouldn't be built until real accounts/progress
+  tracking are actually in scope (PRD.md §9).
+- **Session sizing (10/25/50) doesn't scale indefinitely** — see
+  PRD.md §10. Worth revisiting once the bank is meaningfully larger than
+  50 words per practical session.
+- **Distractor quality for Stage 4** is algorithmic, not hand-authored
+  (§5) — reasonable today, worth periodically spot-checking by eye as
+  more sentence shapes get added.

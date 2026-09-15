@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wortfluss — German language learning, made easy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --board: #2B2E2E;
+    --board-line: #494D49;
+    --chalk: #F0EDE4;
+    --chalk-dim: #9DA199;
+    --chalk-yellow: #E8C468;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background: var(--board);
+    color: var(--chalk);
+    font-family: 'Libre Baskerville', Georgia, serif;
+    min-height: 100vh;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  nav {
+    display: flex; justify-content: space-between; align-items: center;
+    max-width: 1040px; margin: 0 auto; padding: 1.75rem 1.5rem;
+    border-bottom: 1px solid var(--board-line);
+  }
+  .brand { font-size: 20px; font-weight: 700; letter-spacing: 0.02em; background:none; border:none; color:var(--chalk); cursor:pointer; font-family:inherit; padding:0; }
+  .nav-right { display: flex; align-items: center; gap: 1.75rem; }
+  .nav-link {
+    font-family: 'Libre Baskerville', Georgia, serif; font-size: 14px;
+    color: var(--chalk-dim); background: none; border: none; cursor: pointer; padding:0;
+  }
+  .nav-link:hover { color: var(--chalk); }
+  .nav-signup {
+    font-family: 'Libre Baskerville', Georgia, serif; font-size: 14px; color: var(--chalk);
+    border: 1px solid var(--chalk-dim); padding: 6px 16px; background: none; cursor: pointer; border-radius: 2px;
+  }
+  .nav-signup:hover { border-color: var(--chalk); }
+
+  main { max-width: 720px; margin: 0 auto; padding: 4rem 1.5rem 5rem; }
+  .center { text-align: center; }
+
+  h1 { font-size: 42px; font-weight: 700; line-height: 1.25; margin: 0 0 1.5rem; }
+  .underline-wrap { position: relative; display: inline-block; }
+  .underline-wrap svg { position: absolute; left: -2%; bottom: -10px; width: 104%; height: 14px; }
+  .sub { font-size: 18px; color: var(--chalk-dim); line-height: 1.6; max-width: 480px; margin: 0 auto 2.5rem; }
+
+  h2 { font-size: 24px; font-weight: 700; margin: 0 0 0.5rem; }
+  .page-sub { color: var(--chalk-dim); font-size: 15px; margin: 0 0 2.5rem; }
+
+  .btn {
+    font-family: 'Libre Baskerville', Georgia, serif; font-size: 17px;
+    background: var(--chalk-yellow); color: var(--board); border: none;
+    padding: 1rem 2.25rem; cursor: pointer; border-radius: 2px; font-weight: 700; width: 100%;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn-back {
+    font-family: 'Libre Baskerville', Georgia, serif; background: none; border: none;
+    cursor: pointer; color: var(--chalk-dim); font-size: 15px; padding: 0; margin-bottom: 2rem;
+  }
+  .btn-back:hover { color: var(--chalk); }
+
+  .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--chalk-dim); margin: 0 0 0.75rem; }
+  .choice-row { display: flex; gap: 10px; margin-bottom: 2rem; flex-wrap: wrap; }
+  .choice {
+    flex: 1; min-width: 100px; font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px;
+    background: none; color: var(--chalk); border: 1px solid var(--board-line);
+    padding: 0.85rem 0; cursor: pointer; border-radius: 2px;
+  }
+  .choice.selected { border-color: var(--chalk-yellow); border-width: 2px; color: var(--chalk-yellow); font-weight: 700; }
+  .err { font-size: 13px; color: #D98B7A; margin: 0.5rem 0 1rem; min-height: 16px; }
+  .err.ok { color: var(--chalk-yellow); }
+  .hint-row { margin: 10px 0 0; }
+  .hint-link {
+    font-family: 'Libre Baskerville', Georgia, serif; background: none; border: none;
+    color: var(--chalk-dim); font-size: 13px; cursor: pointer; padding: 0; text-decoration: underline;
+  }
+  .hint-link:hover { color: var(--chalk-yellow); }
+  #hint-text { font-size: 13px; color: var(--chalk-yellow); margin-left: 4px; }
+  .mc-options { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+  .mc-option {
+    font-family: 'Libre Baskerville', Georgia, serif; font-size: 16px; text-align: left;
+    background: rgba(240,237,228,0.06); border: 1px solid rgba(240,237,228,0.25);
+    color: var(--chalk); padding: 12px 16px; border-radius: 6px; cursor: pointer;
+  }
+  .mc-option:hover:not(:disabled) { background: rgba(240,237,228,0.12); border-color: var(--chalk-yellow); }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.mc-correct { border-color: var(--chalk-yellow); background: rgba(232,196,104,0.18); }
+  .mc-option.mc-wrong { border-color: #D98B7A; background: rgba(217,139,122,0.18); }
+
+  input[type=text], textarea {
+    font-family: 'Libre Baskerville', Georgia, serif; font-size: 17px; color: var(--chalk);
+    border: none; border-bottom: 2px solid var(--chalk-dim); background: transparent; padding: 6px 2px; outline: none; width: 100%;
+  }
+  input[type=text]:focus, textarea:focus { border-bottom-color: var(--chalk-yellow); }
+  .blank-input { width: 130px; text-align: center; display: inline-block; }
+
+  .board-card { border: 1px dashed var(--board-line); padding: 2rem; margin-bottom: 1rem; }
+  .article-tag {
+    font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--chalk-yellow);
+    border: 1px solid var(--chalk-yellow); padding: 2px 9px; display: inline-block; margin-bottom: 10px;
+  }
+  .board-word { font-size: 30px; font-weight: 700; margin: 0 0 4px; }
+  .board-translation { font-size: 15px; color: var(--chalk-dim); margin: 0; }
+  .board-sentence { font-size: 18px; margin: 0; }
+  .board-en { font-size: 15px; color: var(--chalk-dim); margin: 0 0 10px; }
+  .hl { color: var(--chalk-yellow); font-weight: 700; }
+  .infinitive-ref { font-size: 13px; color: var(--chalk-dim); margin: 10px 0 0; font-style: italic; }
+
+  .roman-track { display: flex; gap: 6px; margin-bottom: 1.25rem; }
+  .roman {
+    font-size: 13px; color: var(--board-line); border: 1px solid var(--board-line);
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+  }
+  .roman.done { color: var(--board); background: var(--chalk-yellow); border-color: var(--chalk-yellow); }
+  .roman.now { color: var(--chalk-yellow); border-color: var(--chalk-yellow); font-weight: 700; }
+  .progress-label { font-size: 13px; color: var(--chalk-dim); margin: 0 0 1rem; }
+
+  .word-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
+  .word-tile { border: 1px solid var(--board-line); padding: 10px 12px; }
+  .word-tile .w { font-weight: 700; font-size: 15px; margin: 0; }
+  .word-tile .t { color: var(--chalk-dim); font-size: 13px; margin: 2px 0 0; }
+
+  .conj-block { border: 1px solid var(--board-line); padding: 1.25rem; margin-bottom: 1.25rem; }
+  .infinitive { font-size: 20px; font-weight: 700; color: var(--chalk-yellow); margin: 0 0 10px; }
+  .conj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+  .conj-grid span { font-size: 14px; }
+
+  .synth { border-left: 3px solid var(--chalk-yellow); padding: 10px 0 10px 16px; margin-bottom: 2rem; }
+  .synth-label { font-size: 12px; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 4px; }
+
+  .stat-row { display: flex; gap: 10px; margin-bottom: 1.75rem; }
+  .stat { flex: 1; border: 1px solid var(--board-line); padding: 1rem; text-align: center; }
+  .stat .n { font-size: 24px; font-weight: 700; margin: 0; color: var(--chalk-yellow); }
+  .stat .l { font-size: 12px; color: var(--chalk-dim); text-transform: uppercase; letter-spacing: 0.06em; margin: 4px 0 0; }
+
+  @media (max-width: 560px) { h1 { font-size: 30px; } .board-card { padding: 1.25rem; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <button class="brand" onclick="resetApp()">Wortfluss</button>
+  <div class="nav-right">
+    <button class="nav-link" onclick="showScreen('scr-typing-setup')">Learn German through typing</button>
+    <button class="nav-link" onclick="void(0)">Log in</button>
+    <button class="nav-signup" onclick="void(0)">Sign up</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- HOME -->
+  <div id="scr-home" class="screen active center">
+    <h1>German language learning,<br>
+      <span class="underline-wrap">made easy<svg viewBox="0 0 200 14" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none"><path d="M2 8 C 30 3, 60 11, 90 6 S 150 2, 198 7" fill="none" stroke="#E8C468" stroke-width="3" stroke-linecap="round"/></svg></span>.
+    </h1>
+    <p class="sub">Every word ends in a sentence that's actually yours — not a flashcard you'll forget by Friday.</p>
+    <button class="btn" style="width:auto; padding:1rem 2.25rem; margin-bottom: 4.5rem;" onclick="showScreen('scr-setup')">Start learning words</button>
+    <p class="label">today's lesson, already on the board</p>
+    <div class="board-card" style="display:inline-block; text-align:left;">
+      <span class="article-tag">der</span>
+      <p class="board-word">Zug</p>
+      <p class="board-translation">the train</p>
+    </div>
+  </div>
+
+  <!-- SETUP -->
+  <div id="scr-setup" class="screen">
+    <button class="btn-back" onclick="showScreen('scr-home')">&larr; back</button>
+    <h2>Set up today's session</h2>
+    <p class="page-sub">Pick a level and how many words to learn.</p>
+    <p class="label">Level</p>
+    <div class="choice-row" id="level-row">
+      <button class="choice" onclick="selectChoice('level-row', this, 'Beginner')">Beginner</button>
+      <button class="choice" onclick="selectChoice('level-row', this, 'Intermediate')">Intermediate</button>
+      <button class="choice" onclick="selectChoice('level-row', this, 'Advanced')">Advanced</button>
+    </div>
+    <p class="label">Words this session</p>
+    <div class="choice-row" id="count-row">
+      <button class="choice" onclick="selectChoice('count-row', this, 10)">10</button>
+      <button class="choice" onclick="selectChoice('count-row', this, 25)">25</button>
+      <button class="choice" onclick="selectChoice('count-row', this, 50)">50</button>
+    </div>
+    <p class="err" id="setup-err"></p>
+    <button class="btn" onclick="beginSession()">Begin</button>
+  </div>
+
+  <!-- SESSION -->
+  <div id="scr-session" class="screen">
+    <button class="btn-back" onclick="showScreen('scr-setup')">&larr; back</button>
+    <p class="progress-label" id="progress-label"></p>
+    <div class="roman-track" id="roman-track"></div>
+    <div id="stage-area"></div>
+  </div>
+
+  <!-- CAPSTONE -->
+  <div id="scr-capstone" class="screen">
+    <p class="label">Today's synthesis</p>
+    <h2>Write one or two sentences</h2>
+    <p class="page-sub" id="capstone-instruction"></p>
+    <textarea id="capstone-input" rows="3" placeholder="Schreib hier..."></textarea>
+    <p class="err" id="capstone-err"></p>
+    <button class="btn" style="margin-top:1rem;" onclick="checkCapstone()">Finish session</button>
+  </div>
+
+  <!-- SUMMARY -->
+  <div id="scr-summary" class="screen">
+    <h2>Session complete</h2>
+    <p class="page-sub" id="summary-count"></p>
+    <div class="word-grid" id="summary-words"></div>
+    <div id="summary-conj"></div>
+    <div class="synth" id="summary-synth" style="display:none;">
+      <p class="synth-label">Your sentence</p>
+      <p id="summary-synth-text" style="margin:0;"></p>
+    </div>
+    <button class="btn" onclick="resetApp()">Done</button>
+  </div>
+
+  <!-- TYPING SETUP -->
+  <div id="scr-typing-setup" class="screen">
+    <button class="btn-back" onclick="showScreen('scr-home')">&larr; back</button>
+    <h2>Typing practice</h2>
+    <p class="page-sub">Speed and accuracy — umlauts, ß, and capitalizing every noun.</p>
+    <p class="label">Level</p>
+    <div class="choice-row" id="typing-level-row">
+      <button class="choice" onclick="selectChoice('typing-level-row', this, 'Beginner')">Beginner</button>
+      <button class="choice" onclick="selectChoice('typing-level-row', this, 'Intermediate')">Intermediate</button>
+      <button class="choice" onclick="selectChoice('typing-level-row', this, 'Advanced')">Advanced</button>
+    </div>
+    <button class="btn" onclick="startTyping()">Start</button>
+  </div>
+
+  <!-- TYPING SESSION -->
+  <div id="scr-typing" class="screen">
+    <button class="btn-back" onclick="showScreen('scr-typing-setup')">&larr; back</button>
+    <p class="board-en" id="typing-en"></p>
+    <p class="board-sentence" id="typing-de" style="margin-bottom:1.5rem;"></p>
+    <input type="text" id="typing-input" placeholder="Type the German sentence above" oninput="onTypingInput()">
+    <p class="err" id="typing-err"></p>
+    <div class="stat-row" id="typing-results" style="display:none;">
+      <div class="stat"><p class="n" id="typing-wpm">0</p><p class="l">words / min</p></div>
+      <div class="stat"><p class="n" id="typing-acc">0%</p><p class="l">accuracy</p></div>
+    </div>
+    <button class="btn" id="typing-next-btn" style="display:none;" onclick="nextTyping()">Next sentence</button>
+  </div>
+
+</main>
+
+<script>
+const WORDS = [
+  {id:'sein', type:'verb', glue:true, de:'sein', en:'to be',
+    blank:'Ich ___ müde.', full:'Ich bin müde.', enSent:'I am tired.', ans:['bin'],
+    prompt:'How are you feeling today?',
+    conj:['ich bin','du bist','er/sie/es ist','wir sind','ihr seid','sie/Sie sind']},
+  {id:'haben', type:'verb', glue:true, de:'haben', en:'to have',
+    blank:'Ich ___ Zeit.', full:'Ich habe Zeit.', enSent:'I have time.', ans:['habe'],
+    prompt:'What do you have with you right now?',
+    conj:['ich habe','du hast','er/sie/es hat','wir haben','ihr habt','sie/Sie haben']},
+  {id:'gehen', type:'verb', glue:true, de:'gehen', en:'to go',
+    blank:'Ich ___ nach Hause.', full:'Ich gehe nach Hause.', enSent:'I go home.', ans:['gehe'],
+    prompt:'Where are you going today?',
+    conj:['ich gehe','du gehst','er/sie/es geht','wir gehen','ihr geht','sie/Sie gehen']},
+  {id:'moechten', type:'verb', glue:true, de:'möchten', en:'would like',
+    blank:'Ich ___ Kaffee.', full:'Ich möchte Kaffee.', enSent:'I would like coffee.', ans:['möchte'],
+    prompt:'What would you like to drink?',
+    conj:['ich möchte','du möchtest','er/sie/es möchte','wir möchten','ihr möchtet','sie/Sie möchten']},
+  {id:'wohnen', type:'verb', glue:true, de:'wohnen', en:'to live',
+    blank:'Ich ___ in Berlin.', full:'Ich wohne in Berlin.', enSent:'I live in Berlin.', ans:['wohne'],
+    prompt:'Where do you live?',
+    conj:['ich wohne','du wohnst','er/sie/es wohnt','wir wohnen','ihr wohnt','sie/Sie wohnen']},
+  {id:'fahren-zug', type:'combo', glue:false, de:'fahren / der Zug', en:'to travel / the train',
+    blank:'Ich ___ mit dem ___.', full:'Ich fahre mit dem Zug.', enSent:'I travel by train.',
+    ans:['fahre','zug'], prompt:'How do you get to work?',
+    conj:['ich fahre','du fährst','er/sie/es fährt','wir fahren','ihr fahrt','sie/Sie fahren']},
+  {id:'sprechen', type:'verb', glue:false, de:'sprechen', en:'to speak',
+    blank:'Ich ___ Deutsch.', full:'Ich spreche Deutsch.', enSent:'I speak German.', ans:['spreche'],
+    prompt:'Which languages do you speak?',
+    conj:['ich spreche','du sprichst','er/sie/es spricht','wir sprechen','ihr sprecht','sie/Sie sprechen']},
+  {id:'lernen', type:'verb', glue:false, de:'lernen', en:'to learn',
+    blank:'Ich ___ Deutsch.', full:'Ich lerne Deutsch.', enSent:'I learn German.', ans:['lerne'],
+    prompt:'What are you learning right now?',
+    conj:['ich lerne','du lernst','er/sie/es lernt','wir lernen','ihr lernt','sie/Sie lernen']},
+  {id:'kommen', type:'verb', glue:false, de:'kommen', en:'to come',
+    blank:'Ich ___ aus Indien.', full:'Ich komme aus Indien.', enSent:'I come from India.', ans:['komme'],
+    prompt:'Where are you from?',
+    conj:['ich komme','du kommst','er/sie/es kommt','wir kommen','ihr kommt','sie/Sie kommen']},
+  {id:'brauchen', type:'verb', glue:false, de:'brauchen', en:'to need',
+    blank:'Ich ___ Hilfe.', full:'Ich brauche Hilfe.', enSent:'I need help.', ans:['brauche'],
+    prompt:'What do you need today?',
+    conj:['ich brauche','du brauchst','er/sie/es braucht','wir brauchen','ihr braucht','sie/Sie brauchen']},
+  {id:'bus', type:'noun', glue:false, article:'der', de:'Bus', en:'bus',
+    blank:'Das ist der ___.', full:'Das ist der Bus.', enSent:'That is the bus.', ans:['bus'],
+    prompt:'Do you ride the bus?'},
+  {id:'haus', type:'noun', glue:false, article:'das', de:'Haus', en:'house',
+    blank:'Das ist das ___.', full:'Das ist das Haus.', enSent:'That is the house.', ans:['haus'],
+    prompt:'Where is your house?'},
+  {id:'freund', type:'noun', glue:false, article:'der', de:'Freund', en:'friend',
+    blank:'Das ist der ___.', full:'Das ist der Freund.', enSent:'That is the friend.', ans:['freund'],
+    prompt:"What's your friend's name?"},
+  {id:'familie', type:'noun', glue:false, article:'die', de:'Familie', en:'family',
+    blank:'Das ist die ___.', full:'Das ist die Familie.', enSent:'That is the family.', ans:['familie'],
+    prompt:'Tell me about your family.'},
+  {id:'zeit', type:'noun', glue:false, article:'die', de:'Zeit', en:'time',
+    blank:'Das ist die ___.', full:'Das ist die Zeit.', enSent:'That is the time.', ans:['zeit'],
+    prompt:'How much time do you have today?'},
+  {id:'arbeit', type:'noun', glue:false, article:'die', de:'Arbeit', en:'work',
+    blank:'Das ist die ___.', full:'Das ist die Arbeit.', enSent:'That is the work.', ans:['arbeit'],
+    prompt:'Where do you work?'},
+  {id:'stadt', type:'noun', glue:false, article:'die', de:'Stadt', en:'city',
+    blank:'Das ist die ___.', full:'Das ist die Stadt.', enSent:'That is the city.', ans:['stadt'],
+    prompt:'Which city do you live in?'},
+  {id:'schule', type:'noun', glue:false, article:'die', de:'Schule', en:'school',
+    blank:'Das ist die ___.', full:'Das ist die Schule.', enSent:'That is the school.', ans:['schule'],
+    prompt:'Do you go to school?'},
+  {id:'tag', type:'noun', glue:false, article:'der', de:'Tag', en:'day',
+    blank:'Das ist der ___.', full:'Das ist der Tag.', enSent:'That is the day.', ans:['tag'],
+    prompt:"How's your day going?"},
+  {id:'woche', type:'noun', glue:false, article:'die', de:'Woche', en:'week',
+    blank:'Das ist die ___.', full:'Das ist die Woche.', enSent:'That is the week.', ans:['woche'],
+    prompt:'What are you doing this week?'},
+  {id:'jahr', type:'noun', glue:false, article:'das', de:'Jahr', en:'year',
+    blank:'Das ist das ___.', full:'Das ist das Jahr.', enSent:'That is the year.', ans:['jahr'],
+    prompt:'What year is it?'},
+  {id:'mensch', type:'noun', glue:false, article:'der', de:'Mensch', en:'person',
+    blank:'Das ist der ___.', full:'Das ist der Mensch.', enSent:'That is the person.', ans:['mensch'],
+    prompt:"Who's an important person to you?"},
+  {id:'wort', type:'noun', glue:false, article:'das', de:'Wort', en:'word',
+    blank:'Das ist das ___.', full:'Das ist das Wort.', enSent:'That is the word.', ans:['wort'],
+    prompt:"What's a new word for you?"},
+  {id:'sprache', type:'noun', glue:false, article:'die', de:'Sprache', en:'language',
+    blank:'Das ist die ___.', full:'Das ist die Sprache.', enSent:'That is the language.', ans:['sprache'],
+    prompt:'Which language are you learning?'},
+  {id:'lehrer', type:'noun', glue:false, article:'der', de:'Lehrer', en:'teacher',
+    blank:'Das ist der ___.', full:'Das ist der Lehrer.', enSent:'That is the teacher.', ans:['lehrer'],
+    prompt:"What's your teacher's name?"},
+
+  // ---- Kapitel 1, Netzwerk neu A1 (installment 1: sections 1a-1c + pre-Hallo) ----
+
+  // ---- NOUNS (10) ----
+  {id:'autobahn', type:'noun', glue:false, article:'die', de:'Autobahn', en:'highway',
+    pluralMarker:'-en', pluralForm:'Autobahnen',
+    blank:'Wir fahren auf der ___.', full:'Wir fahren auf der Autobahn.',
+    enSent:'We are driving on the highway.', ans:['autobahn'],
+    prompt:'Do you enjoy driving on the highway?'},
+
+  {id:'butterbrot', type:'noun', glue:false, article:'das', de:'Butterbrot', en:'sandwich',
+    pluralMarker:'-e', pluralForm:'Butterbrote',
+    blank:'Ich esse ein ___.', full:'Ich esse ein Butterbrot.',
+    enSent:'I am eating a sandwich.', ans:['butterbrot'],
+    prompt:'Do you like having a slice of bread and butter for breakfast?'},
+
+  {id:'flasche', type:'noun', glue:false, article:'die', de:'Flasche', en:'bottle',
+    pluralMarker:'-n', pluralForm:'Flaschen',
+    blank:'Das ist eine ___.', full:'Das ist eine Flasche.',
+    enSent:'That is a bottle.', ans:['flasche'],
+    prompt:"What's in the bottle?"},
+
+  {id:'handtuch', type:'noun', glue:false, article:'das', de:'Handtuch', en:'towel',
+    pluralMarker:'"-er', pluralForm:'Handtücher',
+    blank:'Das ist mein ___.', full:'Das ist mein Handtuch.',
+    enSent:'That is my towel.', ans:['handtuch'],
+    prompt:"Where's your towel?"},
+
+  {id:'kindergarten', type:'noun', glue:false, article:'der', de:'Kindergarten', en:'kindergarten',
+    pluralMarker:'"-', pluralForm:'Kindergärten',
+    blank:'Mein Sohn geht in den ___.', full:'Mein Sohn geht in den Kindergarten.',
+    enSent:'My son goes to kindergarten.', ans:['kindergarten'],
+    prompt:'Gibt es hier einen Kindergarten?'},
+
+  {id:'koffer', type:'noun', glue:false, article:'der', de:'Koffer', en:'suitcase',
+    pluralMarker:'-', pluralForm:'Koffer',
+    blank:'Das ist mein ___.', full:'Das ist mein Koffer.',
+    enSent:'That is my suitcase.', ans:['koffer'],
+    prompt:'How many suitcases do you have?'},
+
+  {id:'nudel', type:'noun', glue:false, article:'die', de:'Nudel', en:'noodle',
+    pluralMarker:'-n', pluralForm:'Nudeln',
+    blank:'Ich koche eine ___.', full:'Ich koche eine Nudel.',
+    enSent:'I am cooking a noodle.', ans:['nudel'],
+    prompt:'Do you like noodles?'},
+
+  {id:'wuerstchen', type:'noun', glue:false, article:'das', de:'Würstchen', en:'sausage',
+    pluralMarker:'-', pluralForm:'Würstchen',
+    blank:'Ich möchte ein ___.', full:'Ich möchte ein Würstchen.',
+    enSent:'I would like a sausage.', ans:['würstchen'],
+    prompt:'Do you like sausages?'},
+
+  {id:'wuerstel', type:'noun', glue:false, article:'das', de:'Würstel', en:'sausage (Austrian)',
+    pluralMarker:'-', pluralForm:'Würstel',
+    blank:'Das ___ heißt in Italien "wurstel".', full:'Das Würstel heißt in Italien "wurstel".',
+    enSent:'The sausage is called "wurstel" in Italy.', ans:['würstel'],
+    prompt:"How do you say 'sausage' in your language?"},
+
+  {id:'kursplakat', type:'noun', glue:false, article:'das', de:'Kursplakat', en:'course poster',
+    pluralMarker:'-e', pluralForm:'Kursplakate',
+    blank:'Ich mache ein ___.', full:'Ich mache ein Kursplakat.',
+    enSent:'I am making a course poster.', ans:['kursplakat'],
+    prompt:'Was steht auf deinem Kursplakat?'},
+
+  // ---- VERBS, regular (4) ----
+  {id:'heissen', type:'verb', glue:true, de:'heißen', en:'to be called',
+    blank:'Ich ___ Anna.', full:'Ich heiße Anna.', enSent:'My name is Anna.',
+    ans:['heiße'], prompt:"What's your name?",
+    conj:['ich heiße','du heißt','er/sie/es heißt','wir heißen','ihr heißt','sie/Sie heißen']},
+
+  {id:'kennen', type:'verb', glue:true, de:'kennen', en:'to know',
+    blank:'Ich ___ die Antwort.', full:'Ich kenne die Antwort.', enSent:'I know the answer.',
+    ans:['kenne'], prompt:'Do you know this city?',
+    conj:['ich kenne','du kennst','er/sie/es kennt','wir kennen','ihr kennt','sie/Sie kennen']},
+
+  {id:'machen', type:'verb', glue:true, de:'machen', en:'to make',
+    blank:'Ich ___ ein Kursplakat.', full:'Ich mache ein Kursplakat.',
+    enSent:'I am making a course poster.', ans:['mache'], prompt:'What are you making today?',
+    conj:['ich mache','du machst','er/sie/es macht','wir machen','ihr macht','sie/Sie machen']},
+
+  {id:'sammeln', type:'verb', glue:false, de:'sammeln', en:'to collect',
+    blank:'Ich ___ Briefmarken.', full:'Ich sammle Briefmarken.',
+    enSent:'I collect stamps.', ans:['sammle'], prompt:'Do you collect anything?',
+    conj:['ich sammle','du sammelst','er/sie/es sammelt','wir sammeln','ihr sammelt','sie/Sie sammeln']},
+
+  // ---- SEPARABLE VERBS (2) — new type, dual-blank ----
+  {id:'zuordnen', type:'separable', glue:false, de:'zuordnen', prefix:'zu', stem:'ordnen',
+    en:'to assign, to match',
+    blank:'Ich ___ die Wörter ___.', full:'Ich ordne die Wörter zu.',
+    enSent:'I am matching the words.', ans:['ordne','zu'],
+    prompt:'What are you matching up right now?',
+    conj:['ich ordne ... zu','du ordnest ... zu','er/sie/es ordnet ... zu',
+          'wir ordnen ... zu','ihr ordnet ... zu','sie/Sie ordnen ... zu']},
+
+  {id:'zusammengehoeren', type:'separable', glue:false, de:'zusammengehören', prefix:'zusammen', stem:'gehören',
+    en:'to fit together, to belong together',
+    blank:'Die Wörter ___ ___.', full:'Die Wörter gehören zusammen.',
+    enSent:'The words belong together.', ans:['gehören','zusammen'],
+    prompt:'Which two things belong together, in your opinion?',
+    conj:['ich gehöre ... zusammen','du gehörst ... zusammen','er/sie/es gehört ... zusammen',
+          'wir gehören ... zusammen','ihr gehört ... zusammen','sie/Sie gehören ... zusammen']},
+
+  // ---- ADJECTIVES (14) — new type, predicate position, single blank ----
+  {id:'gut', type:'adjective', glue:true, de:'gut', en:'good',
+    blank:'Der Kaffee ist ___.', full:'Der Kaffee ist gut.', enSent:'The coffee is good.',
+    ans:['gut'], prompt:"How's it going?"},
+
+  {id:'international', type:'adjective', glue:false, de:'international', en:'international',
+    blank:'Die Firma ist ___.', full:'Die Firma ist international.',
+    enSent:'The company is international.', ans:['international'],
+    prompt:'Is your city international?'},
+
+  {id:'bulgarisch', type:'adjective', glue:false, de:'Bulgarisch', en:'Bulgarian',
+    blank:'Ich spreche ___.', full:'Ich spreche Bulgarisch.', enSent:'I speak Bulgarian.',
+    ans:['bulgarisch'], prompt:'What languages do you speak?'},
+
+  {id:'deutsch', type:'adjective', glue:true, de:'Deutsch', en:'German',
+    blank:'Ich spreche ___.', full:'Ich spreche Deutsch.', enSent:'I speak German.',
+    ans:['deutsch'], prompt:'Do you speak German?'},
+
+  {id:'englisch', type:'adjective', glue:true, de:'Englisch', en:'English',
+    blank:'Ich spreche ___.', full:'Ich spreche Englisch.', enSent:'I speak English.',
+    ans:['englisch'], prompt:'Do you speak English?'},
+
+  {id:'indonesisch', type:'adjective', glue:false, de:'Indonesisch', en:'Indonesian',
+    blank:'Ich spreche ___.', full:'Ich spreche Indonesisch.', enSent:'I speak Indonesian.',
+    ans:['indonesisch'], prompt:'Do you speak Indonesian?'},
+
+  {id:'italienisch', type:'adjective', glue:false, de:'Italienisch', en:'Italian',
+    blank:'Ich spreche ___.', full:'Ich spreche Italienisch.', enSent:'I speak Italian.',
+    ans:['italienisch'], prompt:'Do you speak Italian?'},
+
+  {id:'japanisch', type:'adjective', glue:false, de:'Japanisch', en:'Japanese',
+    blank:'Ich spreche ___.', full:'Ich spreche Japanisch.', enSent:'I speak Japanese.',
+    ans:['japanisch'], prompt:'Do you speak Japanese?'},
+
+  {id:'russisch', type:'adjective', glue:false, de:'Russisch', en:'Russian',
+    blank:'Ich spreche ___.', full:'Ich spreche Russisch.', enSent:'I speak Russian.',
+    ans:['russisch'], prompt:'Do you speak Russian?'},
+
+  {id:'serbisch', type:'adjective', glue:false, de:'Serbisch', en:'Serbian',
+    blank:'Ich spreche ___.', full:'Ich spreche Serbisch.', enSent:'I speak Serbian.',
+    ans:['serbisch'], prompt:'Do you speak Serbian?'},
+
+  {id:'tuerkisch', type:'adjective', glue:false, de:'Türkisch', en:'Turkish',
+    blank:'Ich spreche ___.', full:'Ich spreche Türkisch.', enSent:'I speak Turkish.',
+    ans:['türkisch'], prompt:'Do you speak Turkish?'},
+
+  {id:'ungarisch', type:'adjective', glue:false, de:'Ungarisch', en:'Hungarian',
+    blank:'Ich spreche ___.', full:'Ich spreche Ungarisch.', enSent:'I speak Hungarian.',
+    ans:['ungarisch'], prompt:'Do you speak Hungarian?'},
+
+  {id:'spanisch', type:'adjective', glue:false, de:'Spanisch', en:'Spanish',
+    blank:'Ich spreche ___.', full:'Ich spreche Spanisch.', enSent:'I speak Spanish.',
+    ans:['spanisch'], prompt:'Do you speak Spanish?'},
+
+  // ---- FIXED PHRASE (1) — new type, whole-unit, no carrier sentence ----
+  {id:'gutentag', type:'phrase', glue:true, de:'guten Tag', en:'good day / hello',
+    blank:'___', full:'Guten Tag!', enSent:'Good day! / Hello!',
+    ans:['guten tag'], prompt:'How do people greet each other in Germany?'},
+
+  // ---- KAPITEL 1: "HALLO! TSCHÜS!" (Netzwerk neu A1, sections 2a–2c) — 16 new entries ----
+  // sein/gehen/heißen/gut/sprechen from this section already exist in the bank
+  // from earlier batches. die/dir/du/ich/wer/oder excluded as pure function
+  // words (pronouns, conjunction, article) per the standing exclusion rule.
+
+  // -- verbs (3) --
+  {id:'hoeren', type:'verb', glue:false, de:'hören', en:'to hear / to listen',
+    blank:'Ich ___ Musik.', full:'Ich höre Musik.', enSent:'I listen to music.', ans:['höre'],
+    prompt:'What music do you listen to?',
+    conj:['ich höre','du hörst','er/sie/es hört','wir hören','ihr hört','sie/Sie hören']},
+
+  {id:'lesen', type:'verb', glue:false, de:'lesen', en:'to read',
+    blank:'Ich ___ ein Buch.', full:'Ich lese ein Buch.', enSent:'I read a book.', ans:['lese'],
+    prompt:'What are you reading right now?',
+    conj:['ich lese','du liest','er/sie/es liest','wir lesen','ihr lest','sie/Sie lesen']},
+
+  {id:'spielen', type:'verb', glue:false, de:'spielen', en:'to play',
+    blank:'Ich ___ Fußball.', full:'Ich spiele Fußball.', enSent:'I play football.', ans:['spiele'],
+    prompt:'What sport do you play?',
+    conj:['ich spiele','du spielst','er/sie/es spielt','wir spielen','ihr spielt','sie/Sie spielen']},
+
+  // -- nouns (3) --
+  {id:'person', type:'noun', glue:false, article:'die', de:'Person', en:'person',
+    pluralMarker:'-en', pluralForm:'Personen',
+    blank:'Wer ist die ___?', full:'Wer ist die Person?', enSent:'Who is the person?', ans:['person'],
+    prompt:'Do you know this person?'},
+
+  {id:'situation', type:'noun', glue:false, article:'die', de:'Situation', en:'situation',
+    pluralMarker:'-en', pluralForm:'Situationen',
+    blank:'Das ist die ___.', full:'Das ist die Situation.', enSent:'That is the situation.', ans:['situation'],
+    prompt:'Describe your situation right now.'},
+
+  {id:'name', type:'noun', glue:false, article:'der', de:'Name', en:'name',
+    pluralMarker:'-n', pluralForm:'Namen',
+    blank:'Das ist der ___.', full:'Das ist der Name.', enSent:'That is the name.', ans:['name'],
+    prompt:"What's your name?"},
+
+  // -- invariant adverbs (3), reusing the 'adjective' type per the language-name
+  // precedent above, plus one true predicate adjective (1) --
+  {id:'auch', type:'adjective', glue:true, de:'auch', en:'also / too',
+    blank:'Ich komme ___ aus Deutschland.', full:'Ich komme auch aus Deutschland.',
+    enSent:'I also come from Germany.', ans:['auch'], prompt:'Do you come from Germany too?'},
+
+  {id:'ganz', type:'adjective', glue:false, de:'ganz', en:'pretty / quite',
+    blank:'Der Film ist ___ interessant.', full:'Der Film ist ganz interessant.',
+    enSent:'The movie is pretty interesting.', ans:['ganz'], prompt:'How interesting is the movie, really?'},
+
+  {id:'sehr', type:'adjective', glue:true, de:'sehr', en:'very',
+    blank:'Ich spreche ___ gut Deutsch.', full:'Ich spreche sehr gut Deutsch.',
+    enSent:'I speak very good German.', ans:['sehr'], prompt:'How well do you speak German?'},
+
+  {id:'bekannt', type:'adjective', glue:false, de:'bekannt', en:'well-known',
+    blank:'Der Sänger ist ___.', full:'Der Sänger ist bekannt.',
+    enSent:'The singer is well-known.', ans:['bekannt'], prompt:'Is this singer well-known?'},
+
+  // -- fixed phrases (6) --
+  {id:'hallo', type:'phrase', glue:false, de:'hallo', en:'hello',
+    blank:'___', full:'Hallo!', enSent:'Hello!', ans:['hallo'],
+    prompt:'How do you casually greet someone in German?'},
+
+  {id:'tschuess', type:'phrase', glue:false, de:'tschüs', en:'bye',
+    blank:'___', full:'Tschüs!', enSent:'Bye!', ans:['tschüs'],
+    prompt:'How do you casually say goodbye in German?'},
+
+  {id:'ciao', type:'phrase', glue:false, de:'ciao', en:'bye (informal)',
+    blank:'___', full:'Ciao!', enSent:'Bye!', ans:['ciao'],
+    prompt:'What is a casual, Italian-borrowed way to say goodbye in German?'},
+
+  {id:'danke', type:'phrase', glue:false, de:'danke', en:'thank you',
+    blank:'___', full:'Danke!', enSent:'Thank you!', ans:['danke'],
+    prompt:'How do you say thank you in German?'},
+
+  {id:'bisbald', type:'phrase', glue:false, de:'bis bald', en:'see you soon',
+    blank:'___', full:'Bis bald!', enSent:'See you soon!', ans:['bis bald'],
+    prompt:'How do you say "see you soon" in German?'},
+
+  {id:'entschuldigung', type:'phrase', glue:false, de:'Entschuldigung', en:'sorry / excuse me',
+    blank:'___', full:'Entschuldigung!', enSent:'Sorry! / Excuse me!', ans:['entschuldigung'],
+    prompt:"How do you apologize or politely get someone's attention in German?"},
+];
+
+const TYPING_SENTENCES = [
+  {de:'Ich möchte einen Kaffee, bitte.', en:'I would like a coffee, please.'},
+  {de:'Wo ist die nächste Bäckerei?', en:'Where is the nearest bakery?'},
+  {de:'Die Wohnung hat drei Zimmer.', en:'The apartment has three rooms.'},
+  {de:'Können Sie mir bitte helfen?', en:'Could you please help me?'},
+  {de:'Der Zug fährt um neun Uhr.', en:'The train leaves at nine o clock.'},
+];
+
+const ROMAN = ['I','II','III','IV'];
+const GLUE_THRESHOLD = 3;
+let state = {};
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function selectChoice(rowId, btn, value) {
+  const row = document.getElementById(rowId);
+  row.querySelectorAll('.choice').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  row.dataset.value = value;
+}
+// Fisher-Yates shuffle - returns a new array, never touches the original
+function shuffled(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+// Random session, but with a floor: always includes enough foundational
+// (glue) words to reach GLUE_THRESHOLD, so Stage 4 (free production) can
+// always unlock. Pure unguarded randomness would fail this most of the
+// time on a 10-word session - tested and confirmed before this shipped.
+function buildSession(count) {
+  const n = Math.min(count, WORDS.length);
+  const glueWords = WORDS.filter(w => w.glue);
+  const guaranteedGlueCount = Math.min(GLUE_THRESHOLD, glueWords.length, n);
+  const pickedGlue = shuffled(glueWords).slice(0, guaranteedGlueCount);
+  const pickedIds = new Set(pickedGlue.map(w => w.id));
+  const remainingPool = WORDS.filter(w => !pickedIds.has(w.id));
+  const pickedFill = shuffled(remainingPool).slice(0, n - pickedGlue.length);
+  const session = shuffled(pickedGlue.concat(pickedFill));
+
+  // stage4Unlocked only counts glue words strictly BEFORE the current word,
+  // so a glue word landing in the very last slot doesn't count toward
+  // unlocking anything reachable. If the shuffle put a glue word last and
+  // the session is at (not above) the guaranteed minimum, that one glue
+  // word's position would drop the reachable count below threshold - swap
+  // it with an earlier non-glue word so the guarantee actually holds.
+  const glueCountInSession = session.filter(w => w.glue).length;
+  const lastIndex = session.length - 1;
+  if (session[lastIndex].glue && glueCountInSession <= GLUE_THRESHOLD) {
+    const swapIndex = session.findIndex((w, i) => i < lastIndex && !w.glue);
+    if (swapIndex !== -1) {
+      [session[lastIndex], session[swapIndex]] = [session[swapIndex], session[lastIndex]];
+    }
+  }
+  return session;
+}
+function stage4Unlocked(sessionWords, currentIndex, threshold) {
+  return sessionWords.slice(0, currentIndex).filter(w => w.glue).length >= threshold;
+}
+// ß and ss are answer-equivalent: not every keyboard/learner has easy ß
+// access, and rejecting "heisse" for "heiße" would be punishing spelling
+// access, not German. Case/whitespace leniency unchanged.
+function normalizeAnswer(s) {
+  return s.trim().toLowerCase().replace(/ß/g, 'ss');
+}
+function checkAnswer(userAnswers, word) {
+  if (userAnswers.length !== word.ans.length) return false;
+  return userAnswers.every((a, i) => normalizeAnswer(a) === normalizeAnswer(word.ans[i]));
+}
+
+function beginSession() {
+  const level = document.getElementById('level-row').dataset.value;
+  const count = document.getElementById('count-row').dataset.value;
+  const err = document.getElementById('setup-err');
+  if (!level || !count) { err.textContent = 'Pick a level and a word count first'; return; }
+  err.textContent = '';
+  const session = buildSession(parseInt(count));
+  if (parseInt(count) > WORDS.length) {
+    err.textContent = 'This starter bank only has ' + WORDS.length + ' words — using all of them today.';
+    err.className = 'err ok';
+  }
+  state = { level, sessionWords: session, wordIndex: 0, stage: 1, learned: [] };
+  showScreen('scr-session');
+  renderStage();
+}
+function currentWord() { return state.sessionWords[state.wordIndex]; }
+
+function renderRomanTrack(maxStage) {
+  const track = document.getElementById('roman-track');
+  track.innerHTML = '';
+  for (let i = 1; i <= 4; i++) {
+    const span = document.createElement('span');
+    span.className = 'roman' + (i < state.stage ? ' done' : i === state.stage ? ' now' : '');
+    span.textContent = i > maxStage ? '—' : ROMAN[i - 1];
+    track.appendChild(span);
+  }
+}
+
+function highlightSentence(fullSentence, targets) {
+  let result = fullSentence;
+  targets.forEach(t => {
+    const re = new RegExp('\\b(' + t + ')\\b', 'i');
+    result = result.replace(re, '<span class="hl">$1</span>');
+  });
+  return result;
+}
+
+function renderStage() {
+  const w = currentWord();
+  const unlocked4 = stage4Unlocked(state.sessionWords, state.wordIndex, GLUE_THRESHOLD);
+  document.getElementById('progress-label').textContent = 'Word ' + (state.wordIndex + 1) + ' of ' + state.sessionWords.length;
+  renderRomanTrack(unlocked4 ? 4 : 3);
+  const area = document.getElementById('stage-area');
+
+  if (state.stage === 1) {
+    if (w.type === 'verb' || w.type === 'combo' || w.type === 'separable') {
+      const infinitive = w.de.split(' / ')[0];
+      area.innerHTML = `<div class="board-card">
+        <p class="board-sentence">${highlightSentence(w.full, w.ans)}</p>
+        <p class="board-en">${w.enSent}</p>
+        <p class="infinitive-ref">from ${infinitive} — ${w.en}</p></div>
+        <button class="btn" onclick="advanceStage()">Got it</button>`;
+    } else {
+      area.innerHTML = `<div class="board-card">
+        ${w.article ? `<span class="article-tag">${w.article}</span><br>` : ''}
+        <p class="board-word">${w.de}</p><p class="board-translation">${w.en}</p></div>
+        <button class="btn" onclick="advanceStage()">Got it</button>`;
+    }
+  } else if (state.stage === 2) {
+    const parts = w.blank.split('___');
+    let html = '<p class="board-sentence">';
+    parts.forEach((p, i) => { html += p; if (i < parts.length - 1) html += `<input type="text" class="blank-input" id="blank-${i}">`; });
+    html += '</p>';
+    area.innerHTML = `<div class="board-card">${html}<p class="board-en">${w.enSent}</p>
+      <p class="hint-row"><button class="hint-link" onclick="revealHint()">Need a hint?</button><span id="hint-text"></span></p></div>
+      <p class="err" id="stage-err"></p>
+      <button class="btn" id="stage-check-btn" onclick="checkStage2()">Check</button>
+      <button class="btn" id="stage-next-btn" style="display:none;" onclick="advanceStage()">Next</button>`;
+  } else if (state.stage === 3) {
+    area.innerHTML = `<div class="board-card"><p class="board-en">${w.enSent}</p>
+      <input type="text" id="stage3-input" placeholder="Write it in German">
+      <p class="hint-row"><button class="hint-link" onclick="revealHint()">Need a hint?</button><span id="hint-text"></span></p></div>
+      <p class="err" id="stage-err"></p>
+      <button class="btn" id="stage-check-btn" onclick="checkStage3()">Check</button>
+      <button class="btn" id="stage-next-btn" style="display:none;" onclick="advanceStage()">Next</button>`;
+  } else if (state.stage === 4 && unlocked4) {
+    const options = buildStage4Options(w, WORDS);
+    state.stage4Options = options;
+    area.innerHTML = `<div class="board-card">
+      ${w.article ? `<span class="article-tag">${w.article}</span><br>` : ''}
+      <p class="board-word" style="font-size:22px;">${w.de}</p>
+      <p class="board-en" style="margin-top:8px;">${w.prompt}</p>
+      <p class="board-en" style="opacity:0.8;">Which sentence is right?</p>
+      <div class="mc-options">
+        ${options.map((o, i) => `<button class="mc-option" id="mc-opt-${i}" onclick="checkStage4(${i})">${o.text}</button>`).join('')}
+      </div></div>
+      <p class="err" id="stage-err"></p>
+      <button class="btn" id="stage-next-btn" style="display:none;" onclick="finishWord()">Next</button>`;
+  } else { finishWord(); }
+}
+
+// Builds the Stage 4 multiple-choice set: the real taught sentence, plus 2
+// wrong options. Verb-type words get wrong CONJUGATED forms of the same
+// verb in the same sentence slot (tests the exact skill being taught,
+// safely, since we already know these forms are grammatical). Noun/
+// adjective/phrase words borrow other real, already-correct sentences
+// from the bank instead of synthesizing new German - synthesizing a wrong
+// article is unsafe in general because several sentences use a
+// non-nominative case (e.g. "auf der Autobahn"), so a naive der/die/das
+// swap could accidentally look right or come out ungrammatical.
+function buildStage4Options(word, allWords) {
+  const correct = word.full;
+  let wrongs = [];
+
+  if (['verb', 'combo', 'separable'].includes(word.type) && word.conj) {
+    const taughtForms = word.ans.map(a => a.toLowerCase());
+    const candidateForms = word.conj.map(row => {
+      const parts = row.split(' ');
+      return word.type === 'separable' ? parts[1] : parts[parts.length - 1];
+    }).filter(f => !taughtForms.includes(f.toLowerCase()));
+    const uniqueForms = [...new Set(candidateForms)].slice(0, 2);
+    wrongs = uniqueForms.map(f => {
+      let i = 0;
+      return word.blank.replace(/___/g, () => { const filler = i === 0 ? f : word.ans[i]; i++; return filler; });
+    });
+  }
+
+  if (wrongs.length < 2) {
+    const sameType = allWords.filter(w => w.id !== word.id && w.type === word.type);
+    const pool = sameType.length >= 2 ? sameType : allWords.filter(w => w.id !== word.id);
+    const borrowed = shuffled(pool).map(w => w.full).filter(t => t !== correct && !wrongs.includes(t));
+    wrongs = wrongs.concat(borrowed.slice(0, 2 - wrongs.length));
+  }
+
+  const options = [{ text: correct, correct: true }].concat(wrongs.map(w => ({ text: w, correct: false })));
+  return shuffled(options);
+}
+
+function advanceStage() { state.stage++; renderStage(); }
+
+function revealHint() {
+  document.getElementById('hint-text').textContent = ' \u2192 ' + currentWord().de;
+}
+
+function checkStage2() {
+  const values = Array.from(document.querySelectorAll('#stage-area input[type=text]')).map(p => p.value);
+  const err = document.getElementById('stage-err');
+  if (values.some(v => !v.trim())) { err.textContent = 'Fill in every blank first'; err.className = 'err'; return; }
+  const ok = checkAnswer(values, currentWord());
+  err.textContent = ok ? 'Right.' : ('It\u2019s: ' + currentWord().full);
+  err.className = ok ? 'err ok' : 'err';
+  document.getElementById('stage-check-btn').style.display = 'none';
+  document.getElementById('stage-next-btn').style.display = 'block';
+}
+function checkStage3() {
+  const v = document.getElementById('stage3-input').value.trim();
+  const err = document.getElementById('stage-err');
+  if (!v) { err.textContent = 'Write the sentence first'; err.className = 'err'; return; }
+  const w = currentWord();
+  const norm = normalizeAnswer(v.replace(/[.,]/g, ''));
+  const ok = w.ans.every(a => norm.includes(normalizeAnswer(a)));
+  err.textContent = ok ? 'Right — ' + w.full : 'Close — it\u2019s ' + w.full;
+  err.className = ok ? 'err ok' : 'err';
+  document.getElementById('stage-check-btn').style.display = 'none';
+  document.getElementById('stage-next-btn').style.display = 'block';
+}
+function checkStage4(choiceIndex) {
+  const err = document.getElementById('stage-err');
+  const chosen = state.stage4Options[choiceIndex];
+  document.querySelectorAll('.mc-option').forEach((btn, i) => {
+    btn.disabled = true;
+    if (state.stage4Options[i].correct) btn.classList.add('mc-correct');
+    else if (i === choiceIndex) btn.classList.add('mc-wrong');
+  });
+  err.textContent = chosen.correct ? 'Right.' : ('It\u2019s: ' + currentWord().full);
+  err.className = chosen.correct ? 'err ok' : 'err';
+  document.getElementById('stage-next-btn').style.display = 'block';
+}
+function finishWord() {
+  state.learned.push(currentWord());
+  state.wordIndex++; state.stage = 1;
+  if (state.wordIndex >= state.sessionWords.length) showCapstone(); else renderStage();
+}
+function showCapstone() {
+  const picks = state.learned.slice(-3).map(w => w.de.split(' / ')[0]);
+  document.getElementById('capstone-instruction').textContent = 'Use these in your sentences: ' + picks.join(', ');
+  document.getElementById('capstone-input').value = '';
+  document.getElementById('capstone-err').textContent = '';
+  showScreen('scr-capstone');
+}
+function checkCapstone() {
+  const v = document.getElementById('capstone-input').value.trim();
+  const err = document.getElementById('capstone-err');
+  if (!v) { err.textContent = 'Write at least one sentence first'; return; }
+  state.capstoneText = v;
+  showSummary();
+}
+function typeLabel(type) {
+  return { verb:'verb', combo:'verb', separable:'separable verb',
+    adjective:'adjective', phrase:'phrase' }[type] || '';
+}
+function showSummary() {
+  document.getElementById('summary-count').textContent = state.learned.length + ' new words, ' + state.level.toLowerCase() + ' level';
+  document.getElementById('summary-words').innerHTML = state.learned.map(w => `
+    <div class="word-tile"><p class="w">${w.article ? w.article + ' ' : ''}${w.de.split(' / ')[0]}</p>
+      <p class="t">${w.en}${typeLabel(w.type) ? ' \u00b7 ' + typeLabel(w.type) : ''}</p></div>`).join('');
+  const verbs = state.learned.filter(w => w.type === 'verb' || w.type === 'combo' || w.type === 'separable');
+  document.getElementById('summary-conj').innerHTML = verbs.map(w => `
+    <div class="conj-block"><p class="infinitive">${w.de.split(' / ')[0]}</p>
+      <div class="conj-grid">${w.conj.map(c => `<span>${c}</span>`).join('')}</div></div>`).join('');
+  const synthDiv = document.getElementById('summary-synth');
+  if (state.capstoneText) { document.getElementById('summary-synth-text').textContent = state.capstoneText; synthDiv.style.display = 'block'; }
+  else synthDiv.style.display = 'none';
+  showScreen('scr-summary');
+}
+function resetApp() {
+  ['level-row','count-row'].forEach(id => { document.getElementById(id).dataset.value = ''; });
+  document.querySelectorAll('#level-row .choice, #count-row .choice').forEach(b => b.classList.remove('selected'));
+  showScreen('scr-home');
+}
+
+let typingState = {};
+function startTyping() {
+  const level = document.getElementById('typing-level-row').dataset.value;
+  if (!level) return;
+  typingState = { level, startedAt: null };
+  showScreen('scr-typing');
+  nextTyping();
+}
+function nextTyping() {
+  const s = TYPING_SENTENCES[Math.floor(Math.random() * TYPING_SENTENCES.length)];
+  typingState.sentence = s; typingState.startedAt = null;
+  document.getElementById('typing-en').textContent = s.en;
+  document.getElementById('typing-de').textContent = s.de;
+  document.getElementById('typing-input').value = '';
+  document.getElementById('typing-input').disabled = false;
+  document.getElementById('typing-err').textContent = '';
+  document.getElementById('typing-results').style.display = 'none';
+  document.getElementById('typing-next-btn').style.display = 'none';
+}
+function onTypingInput() {
+  if (!typingState.startedAt) typingState.startedAt = Date.now();
+  const val = document.getElementById('typing-input').value;
+  const target = typingState.sentence.de;
+  if (val.length >= target.length) {
+    const elapsedMin = (Date.now() - typingState.startedAt) / 60000;
+    const wpm = elapsedMin > 0 ? Math.round(target.split(' ').length / elapsedMin) : 0;
+    let correctChars = 0;
+    for (let i = 0; i < target.length; i++) if (val[i] === target[i]) correctChars++;
+    document.getElementById('typing-wpm').textContent = wpm;
+    document.getElementById('typing-acc').textContent = Math.round((correctChars / target.length) * 100) + '%';
+    document.getElementById('typing-results').style.display = 'flex';
+    document.getElementById('typing-next-btn').style.display = 'block';
+    document.getElementById('typing-input').disabled = true;
+  }
+}
+</script>
+</body>
+</html>
