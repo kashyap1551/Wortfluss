@@ -33,11 +33,16 @@ already and had to be rebuilt. Do not re-break them.
    either (sessions are randomized; the session-builder guarantees enough
    foundational words are included specifically so this stage stays
    reachable — see `ARCHITECTURE.md`).
-4. **No word's practice question may show a conflicting form of itself,
-   or of any other verb taught elsewhere in the bank.** E.g. teaching
-   "ich spreche" and then asking "Was **sprichst** du?" in a prompt is a
-   bug, not a stylistic choice — found and fixed once already, now
-   enforced by `test-prompt-consistency.js`.
+4. **No word's practice question — or example sentence — may show a
+   conflicting form of itself, or of any other verb taught elsewhere in
+   the bank.** E.g. teaching "ich spreche" and then asking "Was
+   **sprichst** du?" in a prompt is a bug, not a stylistic choice —
+   found and fixed once already, now enforced by
+   `test-prompt-consistency.js` (prompts) and
+   `test-sentence-verb-conflicts.js` (example sentences — a later audit
+   found 32 real cases, including "ist" vs. `sein`'s taught "bin"
+   appearing in 12 other words' sentences; fixed at full strictness, no
+   exceptions).
 5. **Answer-checking is lenient on purpose:** case-insensitive,
    whitespace-tolerant, and ß/ss-equivalent (not every learner has easy
    ß access). It is never lenient on the actual word/form being tested.
@@ -48,14 +53,16 @@ already and had to be rebuilt. Do not re-break them.
    until the thing it would protect actually exists and has real users.
    Sessions are anonymous and nothing is saved — that's a deliberate
    current choice, not a gap to rush to fill.
-8. **No word's example sentence may be a generic template reused across
-   other words.** 17 nouns once all said "Das ist der/die/das ___." and
-   11 language adjectives all said "Ich spreche ___." — real content
-   made interchangeable with a stand-in, found from actual use, not a
-   style nitpick. Outside `type:'phrase'` (which must share `blank:'___'`
-   by design), no two words may share an identical carrier sentence — now
-   enforced by `test-sentence-variety.js`. Reach for the recurring cast
-   (`ARCHITECTURE.md` §7) before writing a generic "Das ist X."
+8. **No sentence skeleton (the `blank` string) may be used by more than
+   2 words in the whole bank.** At the 55-word mark, "Ich spreche ___."
+   was used by 11 words, "Das ist die/der/das ___." by 15 more — over
+   half the bank made real content interchangeable with a generic
+   stand-in, found from actual use, not a style nitpick. Outside
+   `type:'phrase'` (which must share `blank:'___'` by design), enforced
+   by `test-sentence-variety.js`. Reach for the recurring cast
+   (`ARCHITECTURE.md` §7) before writing a generic "Das ist X" — but
+   only when the sentence's verb is untaught elsewhere (rule 4 governs
+   which verb a sentence can actually use).
 
 ## The process, every time
 
@@ -95,22 +102,25 @@ already and had to be rebuilt. Do not re-break them.
   tests extracted straight from the live file via `tests/extract-live.js`
   — word-shape validation, `test-prompt-consistency.js`, answer-checking,
   hundreds-of-trials session-building/Stage-4-reachability, Stage-4
-  distractor-quality checks, and sentence-variety (below). Run all of
-  `tests/*.js` (skip `extract-live.js`, it's the shared helper) before
-  shipping any content or logic change.
-- **Fixed a real content-quality bug:** 17 of 28 nouns and 11 language
-  adjectives once shared one literal, interchangeable carrier sentence
-  each ("Das ist der/die/das ___." / "Ich spreche ___.") — reads as
-  vague rather than as a real example, and was flagged from actual use.
-  Rewrote all 30 with real variety, introducing a **recurring cast**
-  (Julia, Niklas, Frau Kowalski, Frau Weber, Herr Hansen — the
-  glossary's own example people, not invented; see `ARCHITECTURE.md`
-  §7) so sentences read like one continuing set of people instead of
-  disconnected flashcards. Now enforced by
-  `tests/test-sentence-variety.js`: outside `type:'phrase'` (which must
-  share `blank:'___'` by design), no two words may share an identical
-  carrier sentence — zero tolerance, not a cap. Apply this convention to
-  every new noun/adjective sentence going forward.
+  distractor-quality checks, sentence-variety, and sentence-verb-conflicts
+  (below). Run all of `tests/*.js` (skip `extract-live.js`, it's the
+  shared helper) before shipping any content or logic change.
+- **Fixed two real content-quality bugs.** (1) At the 55-word mark, "Ich
+  spreche ___." was used by 11 words and "Das ist die/der/das ___." by
+  15 more — over half the bank made real content interchangeable with a
+  generic stand-in. Rewrote everything with real variety (rule 8),
+  introducing a **recurring cast** (Julia, Niklas, Frau Kowalski, Frau
+  Weber, Herr Hansen — the glossary's own example people, not invented;
+  `ARCHITECTURE.md` §7) so sentences read like one continuing set of
+  people instead of disconnected flashcards. (2) A follow-up audit found
+  the no-conflicting-verb-form rule (rule 4) had only ever been checked
+  for `prompt` fields, never for the example sentences themselves — 32
+  real cases existed (12 of them "ist" vs. `sein`'s taught "bin"),
+  predating both this session and the sentence-variety fix. Fixed at
+  full strictness, no exceptions. The two rules interact: rule 4
+  constrains which verb a sentence can use more than rule 8 constrains
+  its shape, which is why most fixed sentences ended up first-person
+  rather than using the cast — see `ARCHITECTURE.md` §7 for why.
 - **Known legacy gap, not a bug:** the original 25-word starter set
   predates `pluralMarker`/`pluralForm` being part of the noun data model
   and doesn't have them. These fields are confirmed unused at runtime

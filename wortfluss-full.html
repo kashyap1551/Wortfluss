@@ -296,49 +296,49 @@ const WORDS = [
     prompt:'What do you need today?',
     conj:['ich brauche','du brauchst','er/sie/es braucht','wir brauchen','ihr braucht','sie/Sie brauchen']},
   {id:'bus', type:'noun', glue:false, article:'der', de:'Bus', en:'bus',
-    blank:'Wir fahren mit dem ___.', full:'Wir fahren mit dem Bus.', enSent:'We travel by bus.', ans:['bus'],
+    blank:'Ich nehme den ___.', full:'Ich nehme den Bus.', enSent:'I am taking the bus.', ans:['bus'],
     prompt:'Do you ride the bus?'},
   {id:'haus', type:'noun', glue:false, article:'das', de:'Haus', en:'house',
-    blank:'Herr Hansen hat ein ___.', full:'Herr Hansen hat ein Haus.', enSent:'Herr Hansen has a house.', ans:['haus'],
+    blank:'Ich habe ein ___.', full:'Ich habe ein Haus.', enSent:'I have a house.', ans:['haus'],
     prompt:'Where is your house?'},
   {id:'freund', type:'noun', glue:false, article:'der', de:'Freund', en:'friend',
-    blank:'Niklas ist mein ___.', full:'Niklas ist mein Freund.', enSent:'Niklas is my friend.', ans:['freund'],
+    blank:'Ich bin dein ___.', full:'Ich bin dein Freund.', enSent:'I am your friend.', ans:['freund'],
     prompt:"What's your friend's name?"},
   {id:'familie', type:'noun', glue:false, article:'die', de:'Familie', en:'family',
-    blank:'Julia hat eine ___.', full:'Julia hat eine Familie.', enSent:'Julia has a family.', ans:['familie'],
+    blank:'Ich habe eine ___.', full:'Ich habe eine Familie.', enSent:'I have a family.', ans:['familie'],
     prompt:'Tell me about your family.'},
   {id:'zeit', type:'noun', glue:false, article:'die', de:'Zeit', en:'time',
     blank:'Ich habe keine ___.', full:'Ich habe keine Zeit.', enSent:'I have no time.', ans:['zeit'],
     prompt:'How much time do you have today?'},
   {id:'arbeit', type:'noun', glue:false, article:'die', de:'Arbeit', en:'work',
-    blank:'Frau Weber geht zur ___.', full:'Frau Weber geht zur Arbeit.', enSent:'Frau Weber goes to work.', ans:['arbeit'],
+    blank:'Ich gehe zur ___.', full:'Ich gehe zur Arbeit.', enSent:'I am going to work.', ans:['arbeit'],
     prompt:'Where do you work?'},
   {id:'stadt', type:'noun', glue:false, article:'die', de:'Stadt', en:'city',
-    blank:'Niklas kommt aus der ___.', full:'Niklas kommt aus der Stadt.', enSent:'Niklas comes from the city.', ans:['stadt'],
+    blank:'Ich komme aus der ___.', full:'Ich komme aus der Stadt.', enSent:'I come from the city.', ans:['stadt'],
     prompt:'Which city do you live in?'},
   {id:'schule', type:'noun', glue:false, article:'die', de:'Schule', en:'school',
-    blank:'Julia geht in die ___.', full:'Julia geht in die Schule.', enSent:'Julia goes to school.', ans:['schule'],
+    blank:'Ich gehe in die ___.', full:'Ich gehe in die Schule.', enSent:'I am going to school.', ans:['schule'],
     prompt:'Do you go to school?'},
   {id:'tag', type:'noun', glue:false, article:'der', de:'Tag', en:'day',
     blank:'Der ___ beginnt früh.', full:'Der Tag beginnt früh.', enSent:'The day begins early.', ans:['tag'],
     prompt:"How's your day going?"},
   {id:'woche', type:'noun', glue:false, article:'die', de:'Woche', en:'week',
-    blank:'Die ___ hat sieben Tage.', full:'Die Woche hat sieben Tage.', enSent:'The week has seven days.', ans:['woche'],
+    blank:'Die ___ beginnt am Montag.', full:'Die Woche beginnt am Montag.', enSent:'The week begins on Monday.', ans:['woche'],
     prompt:'What are you doing this week?'},
   {id:'jahr', type:'noun', glue:false, article:'das', de:'Jahr', en:'year',
-    blank:'Ein ___ hat zwölf Monate.', full:'Ein Jahr hat zwölf Monate.', enSent:'A year has twelve months.', ans:['jahr'],
+    blank:'Ein ___ beginnt im Januar.', full:'Ein Jahr beginnt im Januar.', enSent:'A year begins in January.', ans:['jahr'],
     prompt:'What year is it?'},
   {id:'mensch', type:'noun', glue:false, article:'der', de:'Mensch', en:'person',
-    blank:'Der ___ braucht Wasser.', full:'Der Mensch braucht Wasser.', enSent:'A person needs water.', ans:['mensch'],
+    blank:'Der ___ liebt Musik.', full:'Der Mensch liebt Musik.', enSent:'Humans love music.', ans:['mensch'],
     prompt:"Who's an important person to you?"},
   {id:'wort', type:'noun', glue:false, article:'das', de:'Wort', en:'word',
-    blank:'Wortfluss ist ein ___.', full:'Wortfluss ist ein Wort.', enSent:'Wortfluss is a word.', ans:['wort'],
+    blank:'Ich suche ein ___.', full:'Ich suche ein Wort.', enSent:'I am looking for a word.', ans:['wort'],
     prompt:"What's a new word for you?"},
   {id:'sprache', type:'noun', glue:false, article:'die', de:'Sprache', en:'language',
-    blank:'Deutsch ist eine ___.', full:'Deutsch ist eine Sprache.', enSent:'German is a language.', ans:['sprache'],
+    blank:'___ verbindet Menschen.', full:'Sprache verbindet Menschen.', enSent:'Language connects people.', ans:['sprache'],
     prompt:'Which language are you learning?'},
   {id:'lehrer', type:'noun', glue:false, article:'der', de:'Lehrer', en:'teacher',
-    blank:'Herr Hansen ist ___.', full:'Herr Hansen ist Lehrer.', enSent:'Herr Hansen is a teacher.', ans:['lehrer'],
+    blank:'Ich arbeite als ___.', full:'Ich arbeite als Lehrer.', enSent:'I work as a teacher.', ans:['lehrer'],
     prompt:"What's your teacher's name?"},
 
   // ---- Kapitel 1, Netzwerk neu A1 (installment 1: sections 1a-1c + pre-Hallo) ----
@@ -346,8 +346,8 @@ const WORDS = [
   // ---- NOUNS (10) ----
   {id:'autobahn', type:'noun', glue:false, article:'die', de:'Autobahn', en:'highway',
     pluralMarker:'-en', pluralForm:'Autobahnen',
-    blank:'Wir fahren auf der ___.', full:'Wir fahren auf der Autobahn.',
-    enSent:'We are driving on the highway.', ans:['autobahn'],
+    blank:'Ich fahre auf der ___.', full:'Ich fahre auf der Autobahn.',
+    enSent:'I am driving on the highway.', ans:['autobahn'],
     prompt:'Do you enjoy driving on the highway?'},
 
   {id:'butterbrot', type:'noun', glue:false, article:'das', de:'Butterbrot', en:'sandwich',
@@ -358,26 +358,26 @@ const WORDS = [
 
   {id:'flasche', type:'noun', glue:false, article:'die', de:'Flasche', en:'bottle',
     pluralMarker:'-n', pluralForm:'Flaschen',
-    blank:'Das ist eine ___.', full:'Das ist eine Flasche.',
-    enSent:'That is a bottle.', ans:['flasche'],
+    blank:'Ich habe eine ___.', full:'Ich habe eine Flasche.',
+    enSent:'I have a bottle.', ans:['flasche'],
     prompt:"What's in the bottle?"},
 
   {id:'handtuch', type:'noun', glue:false, article:'das', de:'Handtuch', en:'towel',
     pluralMarker:'"-er', pluralForm:'Handtücher',
-    blank:'Julia braucht ein ___.', full:'Julia braucht ein Handtuch.',
-    enSent:'Julia needs a towel.', ans:['handtuch'],
+    blank:'Ich brauche ein ___.', full:'Ich brauche ein Handtuch.',
+    enSent:'I need a towel.', ans:['handtuch'],
     prompt:"Where's your towel?"},
 
   {id:'kindergarten', type:'noun', glue:false, article:'der', de:'Kindergarten', en:'kindergarten',
     pluralMarker:'"-', pluralForm:'Kindergärten',
-    blank:'Mein Sohn geht in den ___.', full:'Mein Sohn geht in den Kindergarten.',
-    enSent:'My son goes to kindergarten.', ans:['kindergarten'],
+    blank:'Mein Sohn besucht den ___.', full:'Mein Sohn besucht den Kindergarten.',
+    enSent:'My son attends kindergarten.', ans:['kindergarten'],
     prompt:'Gibt es hier einen Kindergarten?'},
 
   {id:'koffer', type:'noun', glue:false, article:'der', de:'Koffer', en:'suitcase',
     pluralMarker:'-', pluralForm:'Koffer',
-    blank:'Wo ist mein ___?', full:'Wo ist mein Koffer?',
-    enSent:'Where is my suitcase?', ans:['koffer'],
+    blank:'Der ___ wiegt viel.', full:'Der Koffer wiegt viel.',
+    enSent:'The suitcase weighs a lot.', ans:['koffer'],
     prompt:'How many suitcases do you have?'},
 
   {id:'nudel', type:'noun', glue:false, article:'die', de:'Nudel', en:'noodle',
@@ -444,16 +444,16 @@ const WORDS = [
 
   // ---- ADJECTIVES (14) — new type, predicate position, single blank ----
   {id:'gut', type:'adjective', glue:true, de:'gut', en:'good',
-    blank:'Der Kaffee ist ___.', full:'Der Kaffee ist gut.', enSent:'The coffee is good.',
+    blank:'Ich fühle mich ___.', full:'Ich fühle mich gut.', enSent:'I feel good.',
     ans:['gut'], prompt:"How's it going?"},
 
   {id:'international', type:'adjective', glue:false, de:'international', en:'international',
-    blank:'Die Firma ist ___.', full:'Die Firma ist international.',
-    enSent:'The company is international.', ans:['international'],
+    blank:'Die Firma wirkt ___.', full:'Die Firma wirkt international.',
+    enSent:'The company seems international.', ans:['international'],
     prompt:'Is your city international?'},
 
   {id:'bulgarisch', type:'adjective', glue:false, de:'Bulgarisch', en:'Bulgarian',
-    blank:'Julia spricht ___.', full:'Julia spricht Bulgarisch.', enSent:'Julia speaks Bulgarian.',
+    blank:'Julia liebt ___.', full:'Julia liebt Bulgarisch.', enSent:'Julia loves Bulgarian.',
     ans:['bulgarisch'], prompt:'What languages do you speak?'},
 
   {id:'deutsch', type:'adjective', glue:true, de:'Deutsch', en:'German',
@@ -461,19 +461,19 @@ const WORDS = [
     ans:['deutsch'], prompt:'Do you speak German?'},
 
   {id:'englisch', type:'adjective', glue:true, de:'Englisch', en:'English',
-    blank:'Sprechen Sie ___?', full:'Sprechen Sie Englisch?', enSent:'Do you speak English?',
+    blank:'Ich spreche auch ___.', full:'Ich spreche auch Englisch.', enSent:'I also speak English.',
     ans:['englisch'], prompt:'Do you speak English?'},
 
   {id:'indonesisch', type:'adjective', glue:false, de:'Indonesisch', en:'Indonesian',
-    blank:'Niklas spricht ___.', full:'Niklas spricht Indonesisch.', enSent:'Niklas speaks Indonesian.',
+    blank:'Niklas mag ___.', full:'Niklas mag Indonesisch.', enSent:'Niklas likes Indonesian.',
     ans:['indonesisch'], prompt:'Do you speak Indonesian?'},
 
   {id:'italienisch', type:'adjective', glue:false, de:'Italienisch', en:'Italian',
-    blank:'Frau Weber spricht ___.', full:'Frau Weber spricht Italienisch.', enSent:'Frau Weber speaks Italian.',
+    blank:'Frau Weber übersetzt ___.', full:'Frau Weber übersetzt Italienisch.', enSent:'Frau Weber translates Italian.',
     ans:['italienisch'], prompt:'Do you speak Italian?'},
 
   {id:'japanisch', type:'adjective', glue:false, de:'Japanisch', en:'Japanese',
-    blank:'Herr Hansen spricht ___.', full:'Herr Hansen spricht Japanisch.', enSent:'Herr Hansen speaks Japanese.',
+    blank:'Herr Hansen unterrichtet ___.', full:'Herr Hansen unterrichtet Japanisch.', enSent:'Herr Hansen teaches Japanese.',
     ans:['japanisch'], prompt:'Do you speak Japanese?'},
 
   {id:'russisch', type:'adjective', glue:false, de:'Russisch', en:'Russian',
@@ -485,15 +485,15 @@ const WORDS = [
     ans:['serbisch'], prompt:'Do you speak Serbian?'},
 
   {id:'tuerkisch', type:'adjective', glue:false, de:'Türkisch', en:'Turkish',
-    blank:'Frau Kowalski spricht ___.', full:'Frau Kowalski spricht Türkisch.', enSent:'Frau Kowalski speaks Turkish.',
+    blank:'Frau Kowalski versteht ___.', full:'Frau Kowalski versteht Türkisch.', enSent:'Frau Kowalski understands Turkish.',
     ans:['türkisch'], prompt:'Do you speak Turkish?'},
 
   {id:'ungarisch', type:'adjective', glue:false, de:'Ungarisch', en:'Hungarian',
-    blank:'Wir sprechen ___.', full:'Wir sprechen Ungarisch.', enSent:'We speak Hungarian.',
+    blank:'Wir verstehen ___.', full:'Wir verstehen Ungarisch.', enSent:'We understand Hungarian.',
     ans:['ungarisch'], prompt:'Do you speak Hungarian?'},
 
   {id:'spanisch', type:'adjective', glue:false, de:'Spanisch', en:'Spanish',
-    blank:'Ich möchte ___ lernen.', full:'Ich möchte Spanisch lernen.', enSent:'I would like to learn Spanish.',
+    blank:'Ich möchte ___ üben.', full:'Ich möchte Spanisch üben.', enSent:'I would like to practice Spanish.',
     ans:['spanisch'], prompt:'Do you speak Spanish?'},
 
   // ---- FIXED PHRASE (1) — new type, whole-unit, no carrier sentence ----
@@ -525,7 +525,7 @@ const WORDS = [
   // -- nouns (3) --
   {id:'person', type:'noun', glue:false, article:'die', de:'Person', en:'person',
     pluralMarker:'-en', pluralForm:'Personen',
-    blank:'Wer ist die ___?', full:'Wer ist die Person?', enSent:'Who is the person?', ans:['person'],
+    blank:'Ich kenne diese ___.', full:'Ich kenne diese Person.', enSent:'I know this person.', ans:['person'],
     prompt:'Do you know this person?'},
 
   {id:'situation', type:'noun', glue:false, article:'die', de:'Situation', en:'situation',
@@ -536,7 +536,7 @@ const WORDS = [
 
   {id:'name', type:'noun', glue:false, article:'der', de:'Name', en:'name',
     pluralMarker:'-n', pluralForm:'Namen',
-    blank:'Wie ist dein ___?', full:'Wie ist dein Name?', enSent:'What is your name?', ans:['name'],
+    blank:'Der ___ klingt schön.', full:'Der Name klingt schön.', enSent:'The name sounds nice.', ans:['name'],
     prompt:"What's your name?"},
 
   // -- invariant adverbs (3), reusing the 'adjective' type per the language-name
@@ -546,16 +546,16 @@ const WORDS = [
     enSent:'I also come from Germany.', ans:['auch'], prompt:'Do you come from Germany too?'},
 
   {id:'ganz', type:'adjective', glue:false, de:'ganz', en:'pretty / quite',
-    blank:'Der Film ist ___ interessant.', full:'Der Film ist ganz interessant.',
-    enSent:'The movie is pretty interesting.', ans:['ganz'], prompt:'How interesting is the movie, really?'},
+    blank:'Der Film wirkt ___ interessant.', full:'Der Film wirkt ganz interessant.',
+    enSent:'The movie seems pretty interesting.', ans:['ganz'], prompt:'How interesting is the movie, really?'},
 
   {id:'sehr', type:'adjective', glue:true, de:'sehr', en:'very',
     blank:'Ich spreche ___ gut Deutsch.', full:'Ich spreche sehr gut Deutsch.',
     enSent:'I speak very good German.', ans:['sehr'], prompt:'How well do you speak German?'},
 
   {id:'bekannt', type:'adjective', glue:false, de:'bekannt', en:'well-known',
-    blank:'Der Sänger ist ___.', full:'Der Sänger ist bekannt.',
-    enSent:'The singer is well-known.', ans:['bekannt'], prompt:'Is this singer well-known?'},
+    blank:'Der Sänger wirkt ___.', full:'Der Sänger wirkt bekannt.',
+    enSent:'The singer seems well-known.', ans:['bekannt'], prompt:'Is this singer well-known?'},
 
   // -- fixed phrases (6) --
   {id:'hallo', type:'phrase', glue:false, de:'hallo', en:'hello',

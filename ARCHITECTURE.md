@@ -72,6 +72,28 @@ preference — it's the only way to structurally guarantee the conflict
 can't happen as more verbs get added later. Apply this to every new verb
 or verb-adjacent prompt going forward.
 
+**The rule extends to example sentences too, not just prompts.** A
+word's `full`/`blank` must not show a *different* conjugated form of a
+verb taught elsewhere, either — an audit found 32 real cases (e.g. "Frau
+Weber geht zur Arbeit." used "geht" while `gehen` is taught as "gehe";
+12 of the 32 were "ist" vs. `sein`'s taught "bin"). Chosen at full
+strictness, no exceptions: every one was rewritten. An exact match to a
+verb's own canonical taught form (reusing "komme" where `kommen` teaches
+"komme") is correct reinforcement, not a conflict, and stays allowed.
+Enforced by `test-sentence-verb-conflicts.js`.
+
+This created one real tension worth knowing about: the `adjective`
+type's own documented mechanic is predicate position via "X ist ___"
+(§2 above) — but `sein` is taught as `bin`, so literally every
+predicate-adjective's own sentence would conflict. The fix: satisfy the
+*actual* requirement (predicate position, no attributive-ending
+agreement) with a different predicate-taking verb — `wirken` ("Die
+Firma wirkt international."), reflexive `fühlen` ("Ich fühle mich
+gut.") — instead of insisting on `sein` specifically. Reach for this
+pattern for any new predicate adjective; don't reintroduce `sein` into
+someone else's sentence just because it reads more naturally in the
+moment.
+
 ## 3. Core functions
 
 | Function | Does |
@@ -176,15 +198,31 @@ Source PDFs: the official Klett "Netzwerk neu" A1 and A2 glossaries.
 already caused one near-miss and is now a standing rule, not a
 suggestion.
 
-**Sentence variety is a requirement, not a nice-to-have.** 17 of the
-bank's first 28 nouns once shared one literal carrier sentence ("Das ist
-der/die/das ___.") with nothing varied but the noun — the kind of
-interchangeable template that reads as vague rather than as a real
-example. `tests/test-sentence-variety.js` now enforces that no two nouns
-share an identical `blank`, and caps how many words bank-wide may share
-any single template. When writing a noun's sentence, use a real verb and
-a real context — not a bare identity statement — and draw on the
-**recurring cast** below rather than inventing new names each time:
+**Sentence variety is a requirement, not a nice-to-have.** At the
+55-word mark, "Ich spreche ___." was used by 11 different words, "Das
+ist die ___." by 7, "Das ist der ___." by 5, "Das ist das ___." by 3 —
+over half the bank reused a sentence another word already used, the
+kind of interchangeable template that reads as vague rather than as a
+real example. **Standing rule: no sentence skeleton (the `blank`
+string) may be used by more than 2 words in the entire bank**, outside
+`type:'phrase'` (which must share `blank:'___'` for every entry — that's
+the data model, not a content-quality problem). Enforced by
+`tests/test-sentence-variety.js`. When writing a sentence, use a real
+verb and a real context — not a bare identity statement.
+
+Two rules interact here, and it matters which one wins: every sentence
+must also avoid a conflicting form of any taught verb (§2 above), which
+constrains WHICH verb a sentence can use more than the variety rule
+constrains its shape. In practice this means most rewritten sentences
+ended up first-person ("Ich habe...", "Ich gehe...") rather than using a
+named subject, since almost every verb's own canonical taught form is
+its `ich`-form — a third-person subject forces a different, conflicting
+form of that same verb. Reach for the **recurring cast** below
+specifically when the sentence's verb is one that ISN'T taught
+elsewhere (untaught verbs have no canonical form to conflict with, so
+any subject works) — that's why it shows up for things like "Julia
+liebt Bulgarisch." (lieben is untaught) but not for "Ich habe ein
+Haus." (haben IS taught, as "habe").
 
 | Name | Source |
 |---|---|
