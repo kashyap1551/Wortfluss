@@ -22,6 +22,8 @@ for (const w of WORDS) {
   assert(['noun', 'verb', 'separable', 'combo', 'adjective', 'phrase'].includes(w.type),
     `${tag} unknown type "${w.type}"`);
   assert(typeof w.glue === 'boolean', `${tag} glue must be boolean`);
+  assert(typeof w.source === 'string' && w.source.length > 0,
+    `${tag} missing source (e.g. 'A1-K3', 'A2-K1', or 'starter' for the original hand-built set)`);
   assert(typeof w.de === 'string' && w.de.length > 0, `${tag} missing de`);
   assert(typeof w.en === 'string' && w.en.length > 0, `${tag} missing en`);
   assert(typeof w.blank === 'string', `${tag} missing blank`);

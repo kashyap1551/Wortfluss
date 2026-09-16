@@ -139,12 +139,17 @@ glossary's own license permits reproduction for personal teaching use,
 which covers this project. B1/B2 will be added if and when those
 glossaries are provided.
 
-**Current coverage:** 71 words — a hand-built 25-word starter set used to
-prototype the mechanics before real content existed, plus 46 real entries
-from Kapitel 1 of the A1 glossary (sections 1a–1c, the short unlabeled bit
-before "Hallo! Tschüs!", and 2a–2c). The rest of A1, then A2, are being
-processed the same way: extract with PyMuPDF, categorize by type, write
-natural example sentences, test, ship.
+**Current coverage:** 175 words — a hand-built 25-word starter set used
+to prototype the mechanics before real content existed, plus 150 real
+entries from A1 Kapitel 1 in full (sections 1a through "kurz und klar").
+**Target: 500–800 words**, drawing from A1 and A2 mixed together — both
+map to the Beginner tier, and book order is bookkeeping, not curriculum,
+so extraction no longer proceeds strictly chapter-by-chapter. Built in
+chunks of roughly 100 words, each tested and shipped independently.
+Entries that need grammar the app can't teach at the Beginner level yet
+(reflexive verbs, case-governed verbs, subordinating conjunctions,
+comparatives/superlatives) are deferred to `DEFERRED-INTERMEDIATE.md`
+with a reason, not silently dropped — 3 so far.
 
 Beginner-level content stays to nominative case, present tense, and
 simple sentence structure. More complex grammar (other cases, more
@@ -169,9 +174,12 @@ anticipation of it.
 
 ## 10. Open questions / near-term considerations
 
-- The three session-size options (10/25/50) were fine at 55 words; they
-  will need revisiting once the bank grows into the hundreds, since a
-  50-word cap on a much larger bank means most content is rarely seen.
+- The three session-size options (10/25/50) were fine at 55 words; at
+  175 and heading toward 500–800, a 50-word cap means most content is
+  rarely seen through pure random draws alone. This is exactly what
+  Phase 2's planned curated batch system (pre-built, named word lists
+  per size, validated for composition/glue/variety) is meant to address —
+  not yet built; holding on it until Phase 1's content is reviewed.
 - The multiple-choice "wrong answer" options are generated automatically
   (see `ARCHITECTURE.md` for how) rather than hand-written per word —
   worth periodically spot-checking that they stay genuinely plausible as

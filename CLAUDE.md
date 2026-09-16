@@ -80,11 +80,31 @@ already and had to be rebuilt. Do not re-break them.
 
 ## Current state
 
-- **71 words** in the bank: the original 25-word starter set (hand-built
-  for prototyping, before real content existed), 30 real entries from
-  Netzwerk neu A1, Kapitel 1 (sections 1a–1c and the short unlabeled bit
-  before "Hallo! Tschüs!"), and 16 real entries from Kapitel 1, section
-  "Hallo! Tschüs!" (2a–2c).
+- **175 words** in the bank. 71 from earlier sessions (25 hand-built
+  starter words, 46 real A1 Kapitel 1 entries, sections 1a–2c) plus
+  **104 new words from Phase 1, chunk 1**: the rest of A1 Kapitel 1
+  (sections 3a through "kurz und klar" — greetings, grammar terms,
+  numbers 0–20, countries, 5 more languages, 12 verbs). Every word now
+  carries a `source` field (`'starter'` or `'{book}-K{chapter}'`) so
+  coverage stays trackable now that extraction mixes A1/A2 rather than
+  going strictly in book order. 3 more entries deferred to
+  `DEFERRED-INTERMEDIATE.md` (mein/meine, welche/welcher — both
+  gender/case-agreeing determiners with no mechanic yet; verabschieden —
+  reflexive). Target: 500–800 words total, built in ~100-word chunks,
+  full suite run and committed after each.
+- **New standing rule for self-written sentences (Phase 1/2 only):**
+  may use ONLY already-taught words plus a short whitelist (pronouns,
+  `ist`/`sind`, articles, `und`/`nicht`/`sehr`/`hier`/`gut`) — no
+  invented vocabulary. Enforced by `tests/test-sentence-whitelist.js`,
+  which grandfathers everything written before this rule existed.
+  Produced two reusable techniques (`ARCHITECTURE.md` §7): numbers
+  taught via true arithmetic ("Zwei und drei ist fünf.") instead of a
+  repeated counting frame, and weak nouns (Name, Herr, Buchstabe, ...)
+  kept nominative to dodge an accusative declension the app has no
+  mechanic for. Also required one interpretation call: `ist`/`sind` are
+  now exempt from rule 4's conflicting-form check (`sein` is taught as
+  `bin`) since the whitelist includes them explicitly — flagged as a
+  judgment call, not something stated outright.
 - **6 word types**: noun, verb, adjective, phrase, separable verb, and
   combo (a verb+noun pair taught together). Full field reference for each
   is in `ARCHITECTURE.md`. There is no dedicated 7th type for invariant
@@ -97,53 +117,31 @@ already and had to be rebuilt. Do not re-break them.
   multiple-choice recognition (this last stage used to be open-ended
   "write your own sentence" — replaced after real-use feedback that it
   was too demanding this early; see `PRD.md`).
-- **Test harness now exists** at `tests/` (it didn't before this batch,
-  despite being referenced here and in `ARCHITECTURE.md`): pure-logic
-  tests extracted straight from the live file via `tests/extract-live.js`
-  — word-shape validation, `test-prompt-consistency.js`, answer-checking,
-  hundreds-of-trials session-building/Stage-4-reachability and
-  session-blueprint composition, Stage-4 distractor-quality checks,
-  sentence-variety, and sentence-verb-conflicts — plus the first `jsdom`
-  interaction test, `test-hint-tiers.js` (needs `npm install` once;
-  `package.json`/`node_modules` are test-only, the app itself still has
-  no build step). Run all of `tests/*.js` (skip `extract-live.js`, it's
-  the shared helper) before shipping any content or logic change.
-- **Hint is two-tier now, not one.** Tier 1 (first tap) reveals the
-  target word; tier 2 (second tap) reveals the whole sentence. Tier 1
-  alone used to be it, but that reveals the one word a learner is least
-  likely to be stuck on — the English prompt already gives it away —
-  and does nothing for the *other* words in the sentence. Verified with
-  a real jsdom click-through, not just a read of `revealHint()`.
-- **Session composition is now a deliberate target, not just a random
-  draw with a glue floor.** Each session size has a target count per
-  category — verb/separable/combo counted together as `"verb"` — with
-  invariant adverbs (auch/ganz/sehr) merged into the `adjective` target
-  since that's how they're actually filed (there's no separate `"adverb"`
-  type in the data; see `ARCHITECTURE.md` §4 for the full table). Glue
-  words are drawn first within each category's slot so the Stage-4
-  guarantee (rule 3) still holds regardless of which categories they end
-  up distributed across. If the bank ever grows unevenly enough that a
-  category can't fill its own slot, the shortfall moves to whichever
-  category has the most spare words — session size is always exactly
-  what was requested. Verified with hundreds of trials per size
-  (`tests/test-session-blueprint.js`) and end-to-end through the real
-  setup screen with Playwright.
-- **Fixed two real content-quality bugs.** (1) At the 55-word mark, "Ich
-  spreche ___." was used by 11 words and "Das ist die/der/das ___." by
-  15 more — over half the bank made real content interchangeable with a
-  generic stand-in. Rewrote everything with real variety (rule 8),
-  introducing a **recurring cast** (Julia, Niklas, Frau Kowalski, Frau
-  Weber, Herr Hansen — the glossary's own example people, not invented;
-  `ARCHITECTURE.md` §7) so sentences read like one continuing set of
-  people instead of disconnected flashcards. (2) A follow-up audit found
-  the no-conflicting-verb-form rule (rule 4) had only ever been checked
-  for `prompt` fields, never for the example sentences themselves — 32
-  real cases existed (12 of them "ist" vs. `sein`'s taught "bin"),
-  predating both this session and the sentence-variety fix. Fixed at
-  full strictness, no exceptions. The two rules interact: rule 4
-  constrains which verb a sentence can use more than rule 8 constrains
-  its shape, which is why most fixed sentences ended up first-person
-  rather than using the cast — see `ARCHITECTURE.md` §7 for why.
+- **Hint is two-tier**, not one: tier 1 (first tap) reveals the target
+  word, tier 2 (second tap) reveals the whole sentence — tier 1 alone
+  reveals the one word a learner is least likely to be stuck on, since
+  the English prompt already gives it away.
+- **Session composition is a deliberate target**, not just a random
+  draw with a glue floor: each size has a target count per category
+  (verb/separable/combo counted as `"verb"`; invariant adverbs merged
+  into `adjective`; see `ARCHITECTURE.md` §4 for the table). Glue words
+  are drawn first within each category's slot so the Stage-4 guarantee
+  (rule 3) holds regardless of distribution; a category short on supply
+  redistributes its shortfall from whichever category has the most
+  spare words, so session size is always exactly what was requested.
+- **Test harness** at `tests/` — pure-logic tests extracted from the
+  live file via `tests/extract-live.js` (word-shape, prompt/sentence
+  verb-conflicts, answer-checking, sentence-variety, sentence-whitelist,
+  session-building/blueprint composition, Stage-4 distractor quality)
+  plus one `jsdom` interaction test (`test-hint-tiers.js`; needs
+  `npm install` once — `package.json`/`node_modules` are test-only, the
+  app itself still has no build step). Run all of `tests/*.js` (skip
+  `extract-live.js`) before shipping any content or logic change.
+- **Two content-quality bugs fixed in an earlier session**, both now
+  standing rules: rule 8 (no sentence skeleton shared by more than 2
+  words — over half the 55-word bank once reused one) and rule 4's
+  extension to example sentences, not just prompts (a 32-case audit,
+  fixed at full strictness). Full reasoning in `ARCHITECTURE.md` §7.
 - **Known legacy gap, not a bug:** the original 25-word starter set
   predates `pluralMarker`/`pluralForm` being part of the noun data model
   and doesn't have them. These fields are confirmed unused at runtime
@@ -160,10 +158,17 @@ already and had to be rebuilt. Do not re-break them.
 
 ## Where to pick up
 
-Next: keep processing Netzwerk neu A1, Kapitel 1 — section "Guten Tag!
-Auf Wiedersehen!" (3a–3b) onward (starts right after 2c on the same PDF
-page). Same extraction process each time: pull the relevant pages with
-PyMuPDF (never `pdftotext` — it silently drops characters on this
-document's embedded font), categorize each entry by type, write natural
-example sentences, run `tests/*.js`, verify against the live file, then
-ship.
+Mid-way through a 3-phase plan: Phase 0 (hint fix) and Phase 1 chunk 1
+(104 words, A1 Kapitel 1's remainder) are done, committed separately.
+**Do not start Phase 2 (curated batch system, replacing random session
+composition) until Phase 1 chunk 1 has been reviewed** — that's an
+explicit hold, not a forgotten step.
+
+Next: Phase 1 chunk 2 — continue the 500–800-word target, drawing from
+whichever of A1 (Kapitel 2 onward) or A2 (Kapitel 1 onward) is genuinely
+useful next, not strictly in book order. Same process each chunk: pull
+pages with PyMuPDF (never `pdftotext`), prefer the glossary's own
+parenthetical example sentence when one exists, otherwise write one
+under the whitelist-only rule above, defer anything requiring grammar
+the app can't teach yet to `DEFERRED-INTERMEDIATE.md`, run `tests/*.js`,
+verify against the live file, ship, commit per chunk.

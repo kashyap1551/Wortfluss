@@ -10,6 +10,19 @@
 // is NOT that same verb's own canonical taught form (its `ans`). An exact
 // match to a verb's own canonical form (reusing "komme" where kommen teaches
 // "komme") is correct reinforcement, not a conflict, and is allowed.
+//
+// Exception, added for the Phase 1 A1/A2 expansion: "ist"/"sind" are exempt.
+// The whitelist for writing new sentences (words already taught, plus a
+// short list of scaffolding words) explicitly includes "ist"/"sind" even
+// though `sein` is taught with "bin" as its canonical form. Without this
+// exemption almost no third-person sentence could be written at all (sein
+// is the copula in most simple predicate constructions), so the whitelist's
+// inclusion of these two forms is read as a deliberate, narrow carve-out -
+// not an oversight - specifically for "ist"/"sind" as grammatical scaffolding,
+// not as the vocabulary content being reinforced. Every other verb's forms
+// still hold to full strictness, including "bist"/"seid" (not whitelisted).
+const EXEMPT_FORMS = new Set(['ist', 'sind']);
+
 const { loadLive } = require('./extract-live');
 const { WORDS } = loadLive();
 
@@ -40,6 +53,7 @@ for (const w of WORDS) {
   const tokens = w.full.match(/[a-zà-ÿ']+/gi) || [];
   for (const tok of tokens) {
     const t = tok.toLowerCase();
+    if (EXEMPT_FORMS.has(t)) continue;
     if (!formOwners.has(t)) continue;
     for (const ownerId of formOwners.get(t)) {
       if (canonicalForms.get(ownerId).has(t)) continue; // exact reinforcement, fine

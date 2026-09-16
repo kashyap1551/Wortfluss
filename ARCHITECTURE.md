@@ -20,6 +20,7 @@ Every entry in `WORDS` shares a common shape, extended per type.
 | Field | Type | Meaning |
 |---|---|---|
 | `id` | string | Unique, lowercase, no spaces. Must not collide with any other entry. |
+| `source` | string | Where the word came from — `'starter'` for the original 25-word hand-built set, or `'{book}-K{chapter}'` (e.g. `'A1-K1'`, `'A2-K3'`) for real glossary content. Lets coverage stay trackable once extraction stops going strictly in book order (see §7). |
 | `type` | string | One of `noun`, `verb`, `separable`, `combo`, `adjective`, `phrase`. |
 | `glue` | boolean | Whether this word counts toward the foundational-vocabulary threshold that unlocks Stage 4 (see §3, `stage4Unlocked`). |
 | `de` | string | The German word/infinitive, as shown in Stage 1 and the summary screen. |
@@ -93,6 +94,20 @@ gut.") — instead of insisting on `sein` specifically. Reach for this
 pattern for any new predicate adjective; don't reintroduce `sein` into
 someone else's sentence just because it reads more naturally in the
 moment.
+
+**One narrow exemption, added for the Phase 1 A1/A2 expansion:** `ist`
+and `sind` specifically are allowed anywhere, even though `sein` is
+taught as `bin`. The whitelist for writing new sentences under that
+expansion (§7) explicitly includes `ist`/`sind` — without this, almost
+no third-person sentence could be written at all, since `sein` is the
+copula in most simple predicate constructions and the whitelist has no
+other way to say "is"/"are". Read as a deliberate, narrow carve-out for
+these two forms as grammatical scaffolding, not as the vocabulary
+content being reinforced — every other verb, and `bist`/`seid`, still
+hold to full strictness. Enforced by the `EXEMPT_FORMS` set in
+`test-sentence-verb-conflicts.js`. This is an interpretation call, not
+something spelled out explicitly — flagged for review, not assumed
+silently.
 
 ## 3. Core functions
 
@@ -204,10 +219,11 @@ tests/whatever.js`), living alongside the app. Two kinds:
    `test-prompt-consistency.js` and `test-sentence-verb-conflicts.js`
    (rule 4, for prompts and example sentences respectively),
    `test-answer-checking.js` (rule 5), `test-sentence-variety.js`
-   (rule 8), `test-session-building.js` (the glue-reachability guarantee
-   generally) and `test-session-blueprint.js` (§4's target composition
-   specifically), and `test-stage4-options.js` (§5's two distractor
-   strategies).
+   (rule 8), `test-sentence-whitelist.js` (§7's whitelist-only rule for
+   self-written Phase 1/2 sentences), `test-session-building.js` (the
+   glue-reachability guarantee generally) and `test-session-blueprint.js`
+   (§4's target composition specifically), and `test-stage4-options.js`
+   (§5's two distractor strategies).
 2. **Interaction tests**, using `jsdom` (`devDependency`, hence the
    `package.json`/`node_modules` this needs — the app itself still has
    no build step, this is test-only tooling). Loads the real file into
@@ -254,12 +270,23 @@ constrains its shape. In practice this means most rewritten sentences
 ended up first-person ("Ich habe...", "Ich gehe...") rather than using a
 named subject, since almost every verb's own canonical taught form is
 its `ich`-form — a third-person subject forces a different, conflicting
-form of that same verb. Reach for the **recurring cast** below
-specifically when the sentence's verb is one that ISN'T taught
+form of that same verb. The **recurring cast** below was reached for
+specifically when the sentence's verb was one that ISN'T taught
 elsewhere (untaught verbs have no canonical form to conflict with, so
-any subject works) — that's why it shows up for things like "Julia
+any subject works) — that's why it showed up for things like "Julia
 liebt Bulgarisch." (lieben is untaught) but not for "Ich habe ein
 Haus." (haben IS taught, as "habe").
+
+**That said, the cast is effectively retired for anything written under
+the Phase 1/2 whitelist rule below** — a sentence can no longer lean on
+an untaught flavor verb like `lieben`/`mögen` at all, whitelist-only
+sentences overwhelmingly end up first-person, and a named subject only
+still works on the rare word whose own canonical taught form happens to
+already be third-person (e.g. `lernen`, taught as `lernt`: "Sie lernt
+Ungarisch."). Not a contradiction — the whitelist rule is simply
+stricter than the rule that motivated the cast, and supersedes it in
+practice. The cast's older uses (from before the whitelist rule
+existed) are grandfathered and untouched.
 
 | Name | Source |
 |---|---|
@@ -289,6 +316,40 @@ deciding what to leave out. Established exclusions, for consistency:
   adjectives that don't sit naturally in predicate position (e.g.
   *andere*) — both need their own mechanic, not a forced fit into the
   existing noun/adjective shapes.
+
+**Phase 1/2 (A1+A2 mixed expansion, 500-800 words): the whitelist rule.**
+Extraction no longer goes strictly in book order — A1 and A2 both map to
+the Beginner tier, so content is pulled from whichever chapter is
+genuinely useful next, not wherever the book happens to be. Per entry,
+in priority order: (1) if the glossary gives a parenthetical example
+sentence, use it — publisher-authored, correct, prefer it always; (2)
+otherwise write one, but using ONLY words already taught in the bank,
+plus a short whitelist (ich/du/er/sie/es/wir/ihr, ist/sind, ein/eine/
+der/die/das, und/nicht/sehr/hier/gut — the "ist"/"sind" exemption to
+rule 4 above exists because of this list). No sentence may require
+vocabulary the app hasn't taught. Enforced by
+`tests/test-sentence-whitelist.js`, which grandfathers everything
+written before the rule existed (the starter set and the 46 real A1-K1
+words from earlier sessions) rather than rewriting it retroactively.
+
+Two techniques this constraint produced, worth reusing:
+
+- **Numbers are taught via true arithmetic**, not a repeated counting
+  frame — "Zwei und drei ist fünf." rather than "Das ist die Zahl 5."
+  fifteen times over. Every sum uses a different pair of already-taught
+  numbers, so each of 0-20 gets a genuinely distinct, factual sentence
+  for free, satisfying the sentence-variety rule without extra effort.
+- **Weak (n-declension) nouns — Name, Nachname, Vorname, Herr, Buchstabe
+  — stay nominative.** Their accusative form changes the word itself
+  (Herr → Herrn), which is a real declension the app has no mechanic
+  for and Beginner content avoids. Regular nouns don't have this
+  problem (accusative = nominative form for strong nouns), so it's only
+  ever a concern for this specific small set of nouns.
+
+Entries that can't be taught within the Beginner constraint at all —
+reflexive verbs, case-governed verbs, subordinating conjunctions,
+comparatives/superlatives — are collected in `DEFERRED-INTERMEDIATE.md`
+with the reason for each, not silently dropped.
 
 ## 8. Known technical debt / future direction
 
