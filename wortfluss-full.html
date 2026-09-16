@@ -593,6 +593,18 @@ const TYPING_SENTENCES = [
 
 const ROMAN = ['I','II','III','IV'];
 const GLUE_THRESHOLD = 3;
+// Target composition per session size (ARCHITECTURE.md §4). "verb" here
+// covers verb + separable + combo counted together. There is no separate
+// "adverb" type in the data - auch/ganz/sehr are filed under 'adjective' -
+// so the adverb row from the original spec is merged into 'adjective'
+// (2+1, 5+2, 10+5) rather than inventing a type that doesn't exist.
+const SESSION_BLUEPRINT = {
+  10: { noun: 3, verb: 3, adjective: 3, phrase: 1 },
+  25: { noun: 8, verb: 7, adjective: 7, phrase: 3 },
+  50: { noun: 15, verb: 14, adjective: 15, phrase: 6 },
+};
+const VERB_TYPES = ['verb', 'separable', 'combo'];
+function wordCategory(w) { return VERB_TYPES.includes(w.type) ? 'verb' : w.type; }
 let state = {};
 
 function showScreen(id) {
@@ -618,31 +630,105 @@ function shuffled(arr) {
 // (glue) words to reach GLUE_THRESHOLD, so Stage 4 (free production) can
 // always unlock. Pure unguarded randomness would fail this most of the
 // time on a 10-word session - tested and confirmed before this shipped.
-function buildSession(count) {
-  const n = Math.min(count, WORDS.length);
-  const glueWords = WORDS.filter(w => w.glue);
-  const guaranteedGlueCount = Math.min(GLUE_THRESHOLD, glueWords.length, n);
-  const pickedGlue = shuffled(glueWords).slice(0, guaranteedGlueCount);
-  const pickedIds = new Set(pickedGlue.map(w => w.id));
-  const remainingPool = WORDS.filter(w => !pickedIds.has(w.id));
-  const pickedFill = shuffled(remainingPool).slice(0, n - pickedGlue.length);
-  const session = shuffled(pickedGlue.concat(pickedFill));
-
-  // stage4Unlocked only counts glue words strictly BEFORE the current word,
-  // so a glue word landing in the very last slot doesn't count toward
-  // unlocking anything reachable. If the shuffle put a glue word last and
-  // the session is at (not above) the guaranteed minimum, that one glue
-  // word's position would drop the reachable count below threshold - swap
-  // it with an earlier non-glue word so the guarantee actually holds.
+//
+// stage4Unlocked only counts glue words strictly BEFORE the current word,
+// so a glue word landing in the very last slot doesn't count toward
+// unlocking anything reachable. If the shuffle put a glue word last and
+// the session is at (not above) the guaranteed minimum, that one glue
+// word's position would drop the reachable count below threshold - swap
+// it with an earlier non-glue word so the guarantee actually holds.
+function ensureGlueReachable(session) {
   const glueCountInSession = session.filter(w => w.glue).length;
   const lastIndex = session.length - 1;
-  if (session[lastIndex].glue && glueCountInSession <= GLUE_THRESHOLD) {
+  if (lastIndex >= 0 && session[lastIndex].glue && glueCountInSession <= GLUE_THRESHOLD) {
     const swapIndex = session.findIndex((w, i) => i < lastIndex && !w.glue);
     if (swapIndex !== -1) {
       [session[lastIndex], session[swapIndex]] = [session[swapIndex], session[lastIndex]];
     }
   }
   return session;
+}
+
+// Random session with an unguided glue floor only - used when `count`
+// isn't one of the sizes SESSION_BLUEPRINT covers (the UI only ever offers
+// 10/25/50, so this is a defensive fallback, not the normal path).
+function buildUnguidedSession(n) {
+  const glueWords = WORDS.filter(w => w.glue);
+  const guaranteedGlueCount = Math.min(GLUE_THRESHOLD, glueWords.length, n);
+  const pickedGlue = shuffled(glueWords).slice(0, guaranteedGlueCount);
+  const pickedIds = new Set(pickedGlue.map(w => w.id));
+  const remainingPool = WORDS.filter(w => !pickedIds.has(w.id));
+  const pickedFill = shuffled(remainingPool).slice(0, n - pickedGlue.length);
+  return shuffled(pickedGlue.concat(pickedFill));
+}
+
+// Session with a target composition per type (SESSION_BLUEPRINT), still
+// guaranteeing enough glue words overall for Stage 4 to stay reachable.
+// Within each category's slot, glue words are drawn first (up to however
+// many are still needed bank-wide) so the floor holds no matter how the
+// glue words happen to be distributed across noun/verb/adjective/phrase -
+// then the rest of the slot is filled randomly. If a category doesn't have
+// enough words to fill its own slot, the shortfall is redistributed to
+// whichever category currently has the most words left to draw from, so
+// the session is always exactly `n` words even as the bank grows unevenly.
+function buildBlueprintSession(blueprint, n) {
+  const categories = Object.keys(blueprint);
+  const pools = {};
+  categories.forEach(cat => { pools[cat] = []; });
+  WORDS.forEach(w => { const cat = wordCategory(w); if (pools[cat]) pools[cat].push(w); });
+  categories.forEach(cat => { pools[cat] = shuffled(pools[cat]); });
+
+  let glueStillNeeded = GLUE_THRESHOLD;
+  function takeFromCategory(cat, howMany) {
+    const pool = pools[cat];
+    const glueFirst = pool.filter(w => w.glue);
+    const rest = pool.filter(w => !w.glue);
+    const chosen = [];
+    while (chosen.length < howMany && glueStillNeeded > 0 && glueFirst.length > 0) {
+      chosen.push(glueFirst.shift());
+      glueStillNeeded--;
+    }
+    const leftover = shuffled(glueFirst.concat(rest));
+    while (chosen.length < howMany && leftover.length > 0) {
+      chosen.push(leftover.shift());
+    }
+    const chosenIds = new Set(chosen.map(w => w.id));
+    pools[cat] = pool.filter(w => !chosenIds.has(w.id));
+    return chosen;
+  }
+
+  const picked = [];
+  const pickedIds = new Set();
+  let shortfall = 0;
+  for (const cat of categories) {
+    const target = blueprint[cat];
+    const take = Math.min(target, pools[cat].length);
+    takeFromCategory(cat, take).forEach(w => { picked.push(w); pickedIds.add(w.id); });
+    shortfall += target - take;
+  }
+
+  while (shortfall > 0) {
+    let bestCat = null, bestLen = 0;
+    for (const cat of categories) { if (pools[cat].length > bestLen) { bestLen = pools[cat].length; bestCat = cat; } }
+    if (!bestCat) break;
+    takeFromCategory(bestCat, 1).forEach(w => { picked.push(w); pickedIds.add(w.id); });
+    shortfall--;
+  }
+
+  if (picked.length < n) {
+    shuffled(WORDS.filter(w => !pickedIds.has(w.id))).forEach(w => {
+      if (picked.length < n) { picked.push(w); pickedIds.add(w.id); }
+    });
+  }
+
+  return shuffled(picked);
+}
+
+function buildSession(count) {
+  const n = Math.min(count, WORDS.length);
+  const blueprint = SESSION_BLUEPRINT[count];
+  const session = blueprint ? buildBlueprintSession(blueprint, n) : buildUnguidedSession(n);
+  return ensureGlueReachable(session);
 }
 function stage4Unlocked(sessionWords, currentIndex, threshold) {
   return sessionWords.slice(0, currentIndex).filter(w => w.glue).length >= threshold;

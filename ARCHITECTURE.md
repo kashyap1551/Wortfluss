@@ -99,7 +99,10 @@ moment.
 | Function | Does |
 |---|---|
 | `shuffled(arr)` | Fisher-Yates shuffle. Returns a new array; never mutates the input. |
-| `buildSession(count)` | Builds a random session of `count` words. Reserves enough `glue:true` words to meet `GLUE_THRESHOLD` before filling the rest randomly, then shuffles the combined set — see §4 for why the reservation exists. |
+| `buildSession(count)` | Builds a session of `count` words. For `count` in `SESSION_BLUEPRINT` (10/25/50, the only sizes the UI offers) delegates to `buildBlueprintSession` for a target composition per type; otherwise falls back to `buildUnguidedSession` (a flat glue-floor-only random draw). Either way, finishes with `ensureGlueReachable` — see §4. |
+| `buildBlueprintSession(blueprint, n)` | Fills each type's target count (`SESSION_BLUEPRINT`) from that type's own pool, prioritizing `glue:true` words within each slot until `GLUE_THRESHOLD` is met bank-wide; redistributes any shortfall to whichever type has the most words left, so the result is always exactly `n` words. |
+| `wordCategory(w)` | Maps a word to its blueprint category: verb/separable/combo all count as `"verb"`; everything else passes through as its own `type`. |
+| `ensureGlueReachable(session)` | The last-slot glue swap-fix (§4) as a shared step, run after either session-building path. |
 | `stage4Unlocked(sessionWords, currentIndex, threshold)` | True once `threshold` glue words have appeared before `currentIndex` in the session. |
 | `highlightSentence(fullSentence, targets)` | Wraps each string in `targets` with a highlight span inside `fullSentence`, word-boundary matched. |
 | `normalizeAnswer(s)` | `trim().toLowerCase()`, then `ß` → `ss`. The single source of truth for "is this answer close enough" — used everywhere an answer gets checked. |
@@ -114,14 +117,9 @@ moment.
 
 Pure unguarded shuffling was tried, tested, and rejected: across 300
 simulated 10-word sessions, roughly two-thirds never included enough
-foundational vocabulary to unlock Stage 4 at all. `buildSession`
-therefore reserves `GLUE_THRESHOLD` (currently 3) glue words first,
-fills the remaining slots randomly from everyone else, then shuffles the
-whole set together — so the glue words aren't predictably front-loaded,
-but Stage 4 is still guaranteed reachable every time. This is
-regression-tested with hundreds of randomized trials, not a single
-sample run (session-building logic is inherently probabilistic, so a
-single passing test proves nothing).
+foundational vocabulary to unlock Stage 4 at all. Some floor on glue-word
+inclusion is therefore non-negotiable regardless of what else
+`buildSession` does.
 
 **A gap in that guarantee existed until it was caught by writing the
 hundreds-of-trials test this section describes** (the test itself didn't
@@ -130,10 +128,42 @@ words appearing *strictly before* the current word's index, so a reserved
 glue word that the final shuffle happened to place in the session's very
 *last* slot didn't count toward unlocking anything reachable. Measured at
 ~5% of 10-word sessions and ~0.2% of 25-word sessions before the fix.
-`buildSession` now checks for exactly that case (glue count in the whole
-session at or below `GLUE_THRESHOLD`, and the last slot holding a glue
-word) and swaps the last slot with an earlier non-glue word when it
+`ensureGlueReachable` now checks for exactly that case (glue count in the
+whole session at or below `GLUE_THRESHOLD`, and the last slot holding a
+glue word) and swaps the last slot with an earlier non-glue word when it
 applies. Covered by `tests/test-session-building.js`.
+
+**Session composition is now a deliberate target, not just a random
+draw with a floor.** `SESSION_BLUEPRINT` gives each session size a target
+count per category (verb/separable/combo counted together as `"verb"` —
+there's no separate `"adverb"` category since none of those words are
+filed that way in the data; see §2's adjective-type note):
+
+| Category | 10-word | 25-word | 50-word | Current supply |
+|---|---|---|---|---|
+| noun | 3 | 8 | 15 | 28 |
+| verb (+separable+combo) | 3 | 7 | 14 | 19 |
+| adjective (incl. invariant adverbs) | 3 | 7 | 15 | 17 |
+| phrase | 1 | 3 | 6 | 7 |
+
+`buildBlueprintSession` fills each category's slot from that category's
+own shuffled pool, prioritizing `glue:true` words first (up to whatever's
+still needed to reach `GLUE_THRESHOLD` bank-wide) so the floor holds no
+matter how glue words happen to be distributed across categories — in
+the current bank, glue words split 8 verb / 5 adjective / 1 phrase / 0
+noun, so the verb category alone can always satisfy the threshold at
+every size. If a category ever has fewer words than its slot needs (not
+currently the case — every category has more supply than its largest
+slot), the shortfall is redistributed to whichever category currently
+has the most words left to draw from, so the session is always exactly
+the requested size regardless of how unevenly the bank grows. The whole
+picked set is shuffled once more at the end so categories aren't grouped
+together in play order. `buildSession` still finishes with
+`ensureGlueReachable` regardless of which path built the session.
+Regression-tested with hundreds of trials per size in
+`tests/test-session-blueprint.js`, and verified end-to-end through the
+real setup screen with Playwright (not just by calling `buildSession`
+directly).
 
 ## 5. Stage 4: how the multiple-choice options are built
 
@@ -171,9 +201,13 @@ tests/whatever.js`), living alongside the app. Two kinds:
    reimplementation, since testing a reimplementation only proves the
    reimplementation is correct, not the shipped file. Currently covers:
    `test-word-shape.js` (per-type field validation), 
-   `test-prompt-consistency.js` (rule 4), `test-answer-checking.js`
-   (rule 5), `test-session-building.js` (§4's guarantee), and
-   `test-stage4-options.js` (§5's two distractor strategies).
+   `test-prompt-consistency.js` and `test-sentence-verb-conflicts.js`
+   (rule 4, for prompts and example sentences respectively),
+   `test-answer-checking.js` (rule 5), `test-sentence-variety.js`
+   (rule 8), `test-session-building.js` (the glue-reachability guarantee
+   generally) and `test-session-blueprint.js` (§4's target composition
+   specifically), and `test-stage4-options.js` (§5's two distractor
+   strategies).
 2. **Interaction tests**, using `jsdom` — **not yet built**. The plan is
    to load the real file into a simulated browser and drive it exactly
    like a person would: click buttons, type into fields, read back what

@@ -107,16 +107,22 @@ fit a single "word + translation" shape:
 
 ## 7. Session mechanics
 
-- A learner picks a word count (10, 25, or 50) and starts. Words are
-  drawn **randomly** from the whole bank each time, not in a fixed
-  order — confirmed as the right call precisely because there's no login
-  and no saved progress: every session is a fresh, independent draw for
-  whoever happens to be using it.
-- Randomness has one guardrail: enough foundational vocabulary is always
-  included so the hardest stage (§5, stage 4) never becomes unreachable
-  in a given session. Unguarded randomness was tested and found to break
-  this roughly two-thirds of the time on a 10-word session — this isn't
-  a hypothetical concern, it was measured.
+- A learner picks a word count (10, 25, or 50) and starts. Within that,
+  words are drawn **randomly** from the whole bank each time, not in a
+  fixed order — confirmed as the right call precisely because there's no
+  login and no saved progress: every session is a fresh, independent
+  draw for whoever happens to be using it.
+- Randomness has two guardrails, not one. First: enough foundational
+  vocabulary is always included so the hardest stage (§5, stage 4) never
+  becomes unreachable in a given session. Unguarded randomness was
+  tested and found to break this roughly two-thirds of the time on a
+  10-word session — this isn't a hypothetical concern, it was measured.
+  Second: each session targets a fixed mix of word types (nouns, verbs,
+  adjectives, phrases) rather than letting the draw land wherever it
+  lands — a 10-word session that happened to draw nine phrases and one
+  verb would still "work" mechanically but wouldn't feel like a real
+  mixed lesson (§4's "genuine mix" principle). See `ARCHITECTURE.md` §4
+  for the exact target counts per size.
 - **No accounts, no login, no saved progress**, on purpose. This is a
   deliberate current scope decision (§9), not an oversight.
 

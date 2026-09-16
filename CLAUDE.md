@@ -101,10 +101,25 @@ already and had to be rebuilt. Do not re-break them.
   despite being referenced here and in `ARCHITECTURE.md`): pure-logic
   tests extracted straight from the live file via `tests/extract-live.js`
   — word-shape validation, `test-prompt-consistency.js`, answer-checking,
-  hundreds-of-trials session-building/Stage-4-reachability, Stage-4
-  distractor-quality checks, sentence-variety, and sentence-verb-conflicts
-  (below). Run all of `tests/*.js` (skip `extract-live.js`, it's the
-  shared helper) before shipping any content or logic change.
+  hundreds-of-trials session-building/Stage-4-reachability and
+  session-blueprint composition, Stage-4 distractor-quality checks,
+  sentence-variety, and sentence-verb-conflicts (below). Run all of
+  `tests/*.js` (skip `extract-live.js`, it's the shared helper) before
+  shipping any content or logic change.
+- **Session composition is now a deliberate target, not just a random
+  draw with a glue floor.** Each session size has a target count per
+  category — verb/separable/combo counted together as `"verb"` — with
+  invariant adverbs (auch/ganz/sehr) merged into the `adjective` target
+  since that's how they're actually filed (there's no separate `"adverb"`
+  type in the data; see `ARCHITECTURE.md` §4 for the full table). Glue
+  words are drawn first within each category's slot so the Stage-4
+  guarantee (rule 3) still holds regardless of which categories they end
+  up distributed across. If the bank ever grows unevenly enough that a
+  category can't fill its own slot, the shortfall moves to whichever
+  category has the most spare words — session size is always exactly
+  what was requested. Verified with hundreds of trials per size
+  (`tests/test-session-blueprint.js`) and end-to-end through the real
+  setup screen with Playwright.
 - **Fixed two real content-quality bugs.** (1) At the 55-word mark, "Ich
   spreche ___." was used by 11 words and "Das ist die/der/das ___." by
   15 more — over half the bank made real content interchangeable with a

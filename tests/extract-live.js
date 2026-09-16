@@ -30,7 +30,9 @@ function loadLive() {
   // properties of the sandbox object (same quirk ARCHITECTURE.md §6 notes
   // for jsdom windows) — pull each one out with a follow-up eval instead.
   const names = ['WORDS', 'GLUE_THRESHOLD', 'shuffled', 'buildSession', 'stage4Unlocked',
-    'normalizeAnswer', 'checkAnswer', 'buildStage4Options', 'typeLabel', 'highlightSentence'];
+    'normalizeAnswer', 'checkAnswer', 'buildStage4Options', 'typeLabel', 'highlightSentence',
+    'SESSION_BLUEPRINT', 'VERB_TYPES', 'wordCategory', 'buildBlueprintSession',
+    'buildUnguidedSession', 'ensureGlueReachable'];
   const out = {};
   for (const name of names) {
     out[name] = vm.runInContext(name, context);
