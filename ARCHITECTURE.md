@@ -110,7 +110,7 @@ moment.
 | `buildStage4Options(word, allWords)` | Builds the 3 Stage-4 multiple-choice options (see §5 below for the strategy). |
 | `renderStage()` | Draws whichever of the 4 stages `state.stage` currently points to. |
 | `advanceStage()` / `finishWord()` | Move to the next stage / next word. Both only ever fire from an explicit user click — never a timer. |
-| `revealHint()` | Fills in the on-demand hint text with the word's `de` spelling. |
+| `revealHint()` | Two-tier hint, tracked by `state.hintTier` (reset to 0 whenever `renderStage()` (re)runs). Tier 1 (first click) reveals `word.de`; tier 2 (second click) appends `word.full` and hides the hint link — there's nothing left to reveal. Tier 1 alone used to be the whole hint, but it reveals the one word a learner is least likely to be stuck on (the English prompt already gives it away) and does nothing for the *other* words in the sentence, which tier 2 covers. |
 | `typeLabel(type)` | Maps a `type` to its display label in the end-of-session summary (`separable` → "separable verb", etc.) |
 
 ## 4. Why session-building isn't a simple random draw
@@ -208,13 +208,16 @@ tests/whatever.js`), living alongside the app. Two kinds:
    generally) and `test-session-blueprint.js` (§4's target composition
    specifically), and `test-stage4-options.js` (§5's two distractor
    strategies).
-2. **Interaction tests**, using `jsdom` — **not yet built**. The plan is
-   to load the real file into a simulated browser and drive it exactly
-   like a person would: click buttons, type into fields, read back what
-   actually rendered. This is the only way to verify DOM-level behaviors
-   like "does it actually wait for Next" or "does the hint really
-   appear" — a static read of the code
-   can look correct and still be wrong at the DOM level.
+2. **Interaction tests**, using `jsdom` (`devDependency`, hence the
+   `package.json`/`node_modules` this needs — the app itself still has
+   no build step, this is test-only tooling). Loads the real file into
+   a simulated browser and drives it exactly like a person would: click
+   buttons, type into fields, read back what actually rendered. This is
+   the only way to verify DOM-level behaviors like "does the hint really
+   only reveal the second tier after the first" — a static read of the
+   code can look correct and still be wrong at the DOM level. First one:
+   `test-hint-tiers.js`. Still only one so far — "does it actually wait
+   for Next" and similar are still open for whoever writes the next one.
 
 Two things worth knowing if you extend these: top-level `const`/`let`
 declared in the page's `<script>` (like `WORDS` and `state`) never

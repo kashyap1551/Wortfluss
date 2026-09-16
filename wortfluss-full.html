@@ -783,6 +783,7 @@ function highlightSentence(fullSentence, targets) {
 
 function renderStage() {
   const w = currentWord();
+  state.hintTier = 0; // fresh hint state every time a stage (re)renders
   const unlocked4 = stage4Unlocked(state.sessionWords, state.wordIndex, GLUE_THRESHOLD);
   document.getElementById('progress-label').textContent = 'Word ' + (state.wordIndex + 1) + ' of ' + state.sessionWords.length;
   renderRomanTrack(unlocked4 ? 4 : 3);
@@ -808,14 +809,14 @@ function renderStage() {
     parts.forEach((p, i) => { html += p; if (i < parts.length - 1) html += `<input type="text" class="blank-input" id="blank-${i}">`; });
     html += '</p>';
     area.innerHTML = `<div class="board-card">${html}<p class="board-en">${w.enSent}</p>
-      <p class="hint-row"><button class="hint-link" onclick="revealHint()">Need a hint?</button><span id="hint-text"></span></p></div>
+      <p class="hint-row"><button class="hint-link" id="hint-link" onclick="revealHint()">Need a hint?</button><span id="hint-text"></span></p></div>
       <p class="err" id="stage-err"></p>
       <button class="btn" id="stage-check-btn" onclick="checkStage2()">Check</button>
       <button class="btn" id="stage-next-btn" style="display:none;" onclick="advanceStage()">Next</button>`;
   } else if (state.stage === 3) {
     area.innerHTML = `<div class="board-card"><p class="board-en">${w.enSent}</p>
       <input type="text" id="stage3-input" placeholder="Write it in German">
-      <p class="hint-row"><button class="hint-link" onclick="revealHint()">Need a hint?</button><span id="hint-text"></span></p></div>
+      <p class="hint-row"><button class="hint-link" id="hint-link" onclick="revealHint()">Need a hint?</button><span id="hint-text"></span></p></div>
       <p class="err" id="stage-err"></p>
       <button class="btn" id="stage-check-btn" onclick="checkStage3()">Check</button>
       <button class="btn" id="stage-next-btn" style="display:none;" onclick="advanceStage()">Next</button>`;
@@ -874,8 +875,22 @@ function buildStage4Options(word, allWords) {
 
 function advanceStage() { state.stage++; renderStage(); }
 
+// Two tiers: the target word's spelling is the least useful thing to
+// reveal first (the English prompt already gives that away) - a learner
+// stuck on a sentence is usually stuck on one of the OTHER words in it,
+// which tier 1 alone never helped with. Tier 2 reveals the whole sentence.
 function revealHint() {
-  document.getElementById('hint-text').textContent = ' \u2192 ' + currentWord().de;
+  const w = currentWord();
+  const hintText = document.getElementById('hint-text');
+  const hintLink = document.getElementById('hint-link');
+  state.hintTier = (state.hintTier || 0) + 1;
+  if (state.hintTier === 1) {
+    hintText.textContent = ' \u2192 ' + w.de;
+    hintLink.textContent = 'Show the full sentence?';
+  } else {
+    hintText.textContent = ' \u2192 ' + w.de + ' \u2014 ' + w.full;
+    hintLink.style.display = 'none';
+  }
 }
 
 function checkStage2() {

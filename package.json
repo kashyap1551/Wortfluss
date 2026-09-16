@@ -1,0 +1,8 @@
+{
+  "name": "wortfluss",
+  "private": true,
+  "description": "Dev-only dependency declaration for tests/ - the app itself is a single static HTML file with no build step.",
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}

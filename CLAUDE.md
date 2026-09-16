@@ -103,9 +103,17 @@ already and had to be rebuilt. Do not re-break them.
   — word-shape validation, `test-prompt-consistency.js`, answer-checking,
   hundreds-of-trials session-building/Stage-4-reachability and
   session-blueprint composition, Stage-4 distractor-quality checks,
-  sentence-variety, and sentence-verb-conflicts (below). Run all of
-  `tests/*.js` (skip `extract-live.js`, it's the shared helper) before
-  shipping any content or logic change.
+  sentence-variety, and sentence-verb-conflicts — plus the first `jsdom`
+  interaction test, `test-hint-tiers.js` (needs `npm install` once;
+  `package.json`/`node_modules` are test-only, the app itself still has
+  no build step). Run all of `tests/*.js` (skip `extract-live.js`, it's
+  the shared helper) before shipping any content or logic change.
+- **Hint is two-tier now, not one.** Tier 1 (first tap) reveals the
+  target word; tier 2 (second tap) reveals the whole sentence. Tier 1
+  alone used to be it, but that reveals the one word a learner is least
+  likely to be stuck on — the English prompt already gives it away —
+  and does nothing for the *other* words in the sentence. Verified with
+  a real jsdom click-through, not just a read of `revealHint()`.
 - **Session composition is now a deliberate target, not just a random
   draw with a glue floor.** Each session size has a target count per
   category — verb/separable/combo counted together as `"verb"` — with

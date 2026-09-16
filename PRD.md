@@ -72,12 +72,17 @@ Every word goes through the same four stages, regardless of type:
    explicit "Got it" click.
 2. **Guided.** The same sentence, now with the target word blanked out,
    and the English translation shown alongside as a memory aid. A
-   "Need a hint?" link is available if the learner wants to peek at the
-   word's spelling before answering — hidden by default so it doesn't
-   give the exercise away, but there if genuinely stuck.
+   "Need a hint?" link is available, in two tiers: the first tap reveals
+   the target word's spelling, the second reveals the whole German
+   sentence. The word alone was the *only* tier once, but real use
+   showed that's the one thing a learner is least likely to be stuck
+   on — the English prompt already gives it away. What they're usually
+   stuck on is one of the *other* words in the sentence, which only the
+   second tier actually helps with. Hidden by default, one tap at a
+   time, so it still doesn't give the exercise away outright.
 3. **Translate.** Given only the English meaning, the learner writes the
-   whole German sentence themselves, unaided. A hint link is available
-   here too.
+   whole German sentence themselves, unaided. The same two-tier hint is
+   available here too.
 4. **Recognize.** Three complete German sentences are shown; the learner
    picks the one that's actually correct. This replaced an earlier
    design where the learner had to compose an entirely new sentence
